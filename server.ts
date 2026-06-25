@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { User, Challenge, UserChallenge, CheckIn, Verification, SystemLog } from "./src/types";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -147,6 +148,8 @@ const MOCK_LOGS: SystemLog[] = [
   { id: 'log-4', action: 'USER_ENROLLED', timestamp: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(), details: 'Ryan and Nathanaël enrolled into Yannicks challenge: Daily 5AM Workout.' }
 ];
 
+const DB_FILE = path.join(process.cwd(), "database.json");
+
 // Database state container
 let db = {
   users: JSON.parse(JSON.stringify(MOCK_USERS)) as User[],
@@ -156,6 +159,34 @@ let db = {
   verifications: JSON.parse(JSON.stringify(MOCK_VERIFICATIONS)) as Verification[],
   logs: JSON.parse(JSON.stringify(MOCK_LOGS)) as SystemLog[]
 };
+
+// Helper to save DB to local json file
+function saveDb() {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
+  } catch (err) {
+    console.error("[DATABASE] Error writing to database.json file:", err);
+  }
+}
+
+// Helper to load DB from local json file
+function loadDb() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const content = fs.readFileSync(DB_FILE, "utf-8");
+      const parsed = JSON.parse(content);
+      if (parsed.users && parsed.challenges && parsed.user_challenges && parsed.check_ins && parsed.verifications && parsed.logs) {
+        db = parsed;
+        console.log("[DATABASE] Successfully loaded persistent database from database.json");
+      }
+    } else {
+      saveDb();
+      console.log("[DATABASE] No existing database.json found. Created new one with pristine seed data.");
+    }
+  } catch (err) {
+    console.error("[DATABASE] Error reading database.json, using in-memory fallbacks:", err);
+  }
+}
 
 // Logger helper
 function addLog(action: string, details: string) {
@@ -170,6 +201,7 @@ function addLog(action: string, details: string) {
   if (db.logs.length > 100) {
     db.logs = db.logs.slice(0, 100);
   }
+  saveDb();
 }
 
 // Auth validator middleware / parsed helper
@@ -187,6 +219,9 @@ function getUserIdFromAuth(req: express.Request): string | null {
 }
 
 async function startServer() {
+  // Load database state from disk first
+  loadDb();
+
   const app = express();
   const PORT = 3000;
 
@@ -611,6 +646,7 @@ async function startServer() {
         { id: 'log-' + generateId(), action: 'RESET_SANDBOX', timestamp: new Date().toISOString(), details: 'Database sandbox rollback triggered. Yannick, Ryan & Nathanaël restored.' }
       ]
     };
+    saveDb();
     res.json({ status: "ok" });
   });
 
@@ -619,6 +655,7 @@ async function startServer() {
     db.logs = [
       { id: 'log-' + generateId(), action: 'CLEAR_LOGS', timestamp: new Date().toISOString(), details: 'System ledger logs flushed clean.' }
     ];
+    saveDb();
     res.json({ status: "ok" });
   });
 
