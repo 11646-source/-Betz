@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { User, Challenge, UserChallenge, CheckIn, Verification, SystemLog } from "./src/types";
+import { GoogleGenAI, Type } from "@google/genai";
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -280,11 +281,14 @@ async function startServer() {
     }
 
     const user = db.users.find(u => u.id === userId)!;
-    const { title, description, category, reward_xp, duration_days } = req.body;
+    const { title, description, category, reward_xp, duration_days, starts_in_hours } = req.body;
 
     if (!title || !description || !category || !reward_xp || !duration_days) {
       return res.status(400).json({ error: "All challenge meta parameters (title, description, category, reward_xp, duration_days) are required." });
     }
+
+    const delayHours = starts_in_hours !== undefined ? Number(starts_in_hours) : 1;
+    const startTimeDate = new Date(Date.now() + delayHours * 3600 * 1000);
 
     const challengeId = 'chal-' + generateId();
     const newChallenge: Challenge = {
@@ -297,7 +301,8 @@ async function startServer() {
       reward_xp: Number(reward_xp),
       participants_count: 1, // Creator is joined immediately
       duration_days: Number(duration_days),
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      start_time: startTimeDate.toISOString()
     };
 
     db.challenges.push(newChallenge);
@@ -681,6 +686,172 @@ async function startServer() {
     }
 
     res.status(400).json({ error: "Could not process reminder simulation." });
+  });
+
+  // Simulate a warning alarm for a challenge starting in 1 hour
+  app.post("/api/system/simulate-start", (req, res) => {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    const user = db.users.find(u => u.id === userId);
+    // Find the latest challenge created or first challenge
+    const chal = db.challenges[db.challenges.length - 1] || db.challenges[0];
+
+    if (chal && user) {
+      addLog('ALARM_START_SOON', `⏰ UPCOMING ALARM: "${chal.title}" starts in 1 hour! Challenger @${user.username}, make sure you are ready to log proof!`);
+      return res.json({
+        success: true,
+        message: `Starting soon alarm broadcasted for "${chal.title}".`,
+        challengeTitle: chal.title
+      });
+    }
+
+    res.status(400).json({ error: "Could not process starting simulation." });
+  });
+
+  // Research and generate challenge + challenger using Gemini API
+  app.post("/api/system/research-challenger", async (req, res) => {
+    const { topic, userId } = req.body;
+    if (!topic) {
+      return res.status(400).json({ error: "Research topic is required." });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(400).json({ error: "GEMINI_API_KEY environment variable is not configured." });
+    }
+
+    try {
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: `Find/research a matching human friend/accountability partner and a custom challenge outline for: "${topic}".`,
+        config: {
+          systemInstruction: `You are an expert matchmaking and social discovery engine for BETZ, a high-stakes habit verification game. Based on the user's research topic or interest, find/create a realistic human friend/accountability partner (a real person, NOT a bot or AI) who shares this specific passion, and design a customized daily habit challenge for both of them to complete. Return JSON with 'challenge' (title, description, category, reward_xp, duration_days) and 'challenger' (username, email, bio). The category must be one of: Fitness, Coding, Research, Nutrition, Mental. The challenger MUST be a human-like friend profile with a realistic human username (e.g. 'sarah_runs', 'dev_dan', 'alex_keto', 'emily_reads' - NO 'bot', 'ai', 'system', or 'agent' in the name). The bio should describe their human background, career, or hobby interests that make them a perfect new partner friend for the user.`,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              challenge: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING, description: "A punchy, short, motivating title for the challenge, under 50 characters." },
+                  description: { type: Type.STRING, description: "Actionable details on what researchers must log to prove completion, under 180 characters." },
+                  category: { type: Type.STRING, description: "Must be exactly one of: Fitness, Coding, Research, Nutrition, Mental." },
+                  reward_xp: { type: Type.INTEGER, description: "XP reward. Choose one of: 100, 150, 200, 300." },
+                  duration_days: { type: Type.INTEGER, description: "Duration in days. Choose one of: 3, 5, 7, 10." }
+                },
+                required: ["title", "description", "category", "reward_xp", "duration_days"]
+              },
+              challenger: {
+                type: Type.OBJECT,
+                properties: {
+                  username: { type: Type.STRING, description: "Lowercase, alphanumeric only username for the new human friend (e.g. 'jake_lifts', 'code_clara', 'sophia_reads'). No spaces, no 'bot' or 'ai' keywords." },
+                  email: { type: Type.STRING, description: "Email for this person." },
+                  bio: { type: Type.STRING, description: "A 1-sentence description of this person's background, hobby or career that makes them a great match." }
+                },
+                required: ["username", "email", "bio"]
+              }
+            },
+            required: ["challenge", "challenger"]
+          }
+        }
+      });
+
+      const resultText = response.text;
+      if (!resultText) {
+        throw new Error("Empty response from Gemini research model.");
+      }
+
+      const data = JSON.parse(resultText);
+
+      // Sanitize username
+      let usernameClean = data.challenger.username.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      if (!usernameClean) {
+        usernameClean = "ai_challenger_" + generateId().slice(0, 5);
+      }
+
+      // Check if username already exists, if so append unique suffix
+      let finalUsername = usernameClean;
+      let suffix = 1;
+      while (db.users.some(u => u.username === finalUsername)) {
+        finalUsername = `${usernameClean}_${suffix}`;
+        suffix++;
+      }
+
+      // Create Challenger User
+      const challengerUser: User = {
+        id: 'user-' + generateId(),
+        username: finalUsername,
+        email: data.challenger.email || `${finalUsername}@betz.ai`,
+        total_xp: 150
+      };
+      db.users.push(challengerUser);
+
+      // Create Challenge
+      const challengeId = 'chal-' + generateId();
+      const newChallenge: Challenge = {
+        id: challengeId,
+        title: data.challenge.title || `${topic} Challenge`,
+        description: data.challenge.description || `Daily tracking of ${topic}.`,
+        category: data.challenge.category || "Research",
+        creator_id: challengerUser.id,
+        creator_username: challengerUser.username,
+        reward_xp: Number(data.challenge.reward_xp) || 150,
+        participants_count: userId ? 2 : 1,
+        duration_days: Number(data.challenge.duration_days) || 7,
+        created_at: new Date().toISOString(),
+        start_time: new Date(Date.now() + 1 * 3600 * 1000).toISOString() // Starts in 1 hour
+      };
+      db.challenges.push(newChallenge);
+
+      // Enroll Challenger
+      db.user_challenges.push({
+        id: 'uc-' + generateId(),
+        user_id: challengerUser.id,
+        challenge_id: challengeId,
+        enrolled_at: new Date().toISOString(),
+        status: 'ACTIVE',
+        progress: 0
+      });
+
+      // Enroll User
+      if (userId) {
+        db.user_challenges.push({
+          id: 'uc-' + generateId(),
+          user_id: userId,
+          challenge_id: challengeId,
+          enrolled_at: new Date().toISOString(),
+          status: 'ACTIVE',
+          progress: 0
+        });
+      }
+
+      addLog('FRIEND_RESEARCH_CHALLENGE', `Matchmaker created a new challenge: "${newChallenge.title}" with category ${newChallenge.category}.`);
+      addLog('FRIEND_MATCHED', `New friend matched: @${challengerUser.username}! Bio: "${data.challenger.bio}".`);
+      addLog('USER_ENROLLED', `@${challengerUser.username} and you joined the task group for "${newChallenge.title}".`);
+
+      res.json({
+        success: true,
+        challenge: newChallenge,
+        challenger: challengerUser,
+        bio: data.challenger.bio
+      });
+
+    } catch (err: any) {
+      console.error("[GEMINI ERROR]", err);
+      res.status(500).json({ error: err.message || "Failed to research challenge using Gemini." });
+    }
   });
 
 

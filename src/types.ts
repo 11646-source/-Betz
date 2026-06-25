@@ -16,6 +16,7 @@ export interface Challenge {
   participants_count: number;
   duration_days: number;
   created_at: string;
+  start_time?: string;
 }
 
 export interface UserChallenge {

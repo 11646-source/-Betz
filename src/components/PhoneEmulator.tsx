@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, CheckCircle, Clock, Trophy, Award, LogIn, LogOut, 
   Check, X, ShieldCheck, PlusCircle, Activity, Calendar, UserPlus, 
-  ChevronRight, Send, User, Target, Layers,
+  ChevronRight, Send, User, Target, Layers, Search,
   Bell, AlertTriangle, Volume2, Info
 } from 'lucide-react';
 import EBLogo from './EBLogo';
@@ -65,6 +65,39 @@ const playReminderSound = () => {
   }
 };
 
+const playWarningSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    
+    // First high beep
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now); // D5
+    gain1.gain.setValueAtTime(0.06, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.15);
+    
+    // Second higher beep (staggered slightly for dual tone/chime warning effect)
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880.00, now + 0.12); // A5
+    gain2.gain.setValueAtTime(0.06, now + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    osc2.start(now + 0.12);
+    osc2.stop(now + 0.3);
+  } catch (err) {
+    console.warn('Audio Context blocked or unsupported:', err);
+  }
+};
+
 interface PhoneEmulatorProps {
   currentUser: {
     id: string;
@@ -104,7 +137,7 @@ export default function PhoneEmulator({
   
   // Alarms and Warning States
   const [showAlarmsDrawer, setShowAlarmsDrawer] = useState(false);
-  const [activeBanner, setActiveBanner] = useState<{ type: 'REMINDER' | 'LOST'; title: string; msg: string } | null>(null);
+  const [activeBanner, setActiveBanner] = useState<{ type: 'REMINDER' | 'LOST' | 'STARTING'; title: string; msg: string } | null>(null);
   const [alarms, setAlarms] = useState<any[]>([]);
 
   // Generate real-time alarms from user enrollment states
@@ -139,8 +172,59 @@ export default function PhoneEmulator({
       }
     });
 
+    // Check if any registry challenge starts in less than 1 hour (65 minutes)
+    challenges.forEach(chal => {
+      if (chal.start_time) {
+        const startMs = new Date(chal.start_time).getTime();
+        const nowMs = Date.now();
+        const diffMs = startMs - nowMs;
+        const diffMins = diffMs / (60 * 1000);
+
+        if (diffMins > 0 && diffMins <= 65) {
+          const formattedMins = Math.round(diffMins);
+          newAlarms.push({
+            id: `start-soon-${chal.id}`,
+            type: 'STARTING',
+            title: 'STARTING SOON! ⏰',
+            message: `⚠️ ALARM: "${chal.title}" is starting in exactly ${formattedMins} minutes! Get ready to perform your tasks.`,
+            timestamp: chal.start_time,
+            severity: 'medium'
+          });
+        }
+      }
+    });
+
     setAlarms(newAlarms);
-  }, [userChallenges, currentUser]);
+  }, [userChallenges, challenges, currentUser]);
+
+  // Automatically trigger sound and full-screen overlay when a new starting-soon warning alarm is active
+  const [lastStartingCount, setLastStartingCount] = useState(0);
+  useEffect(() => {
+    const startingAlarms = alarms.filter(a => a.type === 'STARTING');
+    if (startingAlarms.length > lastStartingCount) {
+      const lastAlarm = startingAlarms[startingAlarms.length - 1];
+      setActiveBanner({
+        type: 'STARTING',
+        title: lastAlarm.title,
+        msg: lastAlarm.message
+      });
+    }
+    setLastStartingCount(startingAlarms.length);
+  }, [alarms, lastStartingCount]);
+
+  // Continuous loop trigger when the starting warning overlay is active
+  useEffect(() => {
+    if (activeBanner?.type === 'STARTING') {
+      // Play immediately
+      playWarningSound();
+      
+      const interval = setInterval(() => {
+        playWarningSound();
+      }, 1500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [activeBanner]);
   
   // Auth state inputs
   const [loginForm, setLoginForm] = useState({ usernameOrEmail: '', password: '123456' });
@@ -162,10 +246,54 @@ export default function PhoneEmulator({
     description: '',
     category: 'Fitness',
     reward_xp: 150,
-    duration_days: 7
+    duration_days: 7,
+    starts_in_hours: 1
   });
   const [createSuccess, setCreateSuccess] = useState(false);
   const [createError, setCreateError] = useState('');
+
+  // AI Research Challenger States
+  const [createMode, setCreateMode] = useState<'MANUAL' | 'RESEARCH'>('MANUAL');
+  const [researchTopic, setResearchTopic] = useState('');
+  const [researchLoading, setResearchLoading] = useState(false);
+  const [researchError, setResearchError] = useState('');
+  const [researchSuccess, setResearchSuccess] = useState<{ challenge: any, challenger: any, bio: string } | null>(null);
+
+  const handleResearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!researchTopic.trim()) return;
+    setResearchLoading(true);
+    setResearchError('');
+    setResearchSuccess(null);
+    try {
+      const res = await fetch('/api/system/research-challenger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: researchTopic.trim(),
+          userId: currentUser?.id
+        })
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to research topic');
+      }
+      const data = await res.json();
+      setResearchSuccess(data);
+      setResearchTopic('');
+      playReminderSound();
+      
+      // Auto redirect back to Discover after showing details
+      setTimeout(() => {
+        setResearchSuccess(null);
+        setActiveTab('DISCOVER');
+      }, 5000);
+    } catch (err: any) {
+      setResearchError(err.message || 'System error compiling AI research');
+    } finally {
+      setResearchLoading(false);
+    }
+  };
 
   // Handle Auth actions
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -230,7 +358,8 @@ export default function PhoneEmulator({
         description: '',
         category: 'Fitness',
         reward_xp: 150,
-        duration_days: 7
+        duration_days: 7,
+        starts_in_hours: 1
       });
       setTimeout(() => {
         setCreateSuccess(false);
@@ -258,7 +387,11 @@ export default function PhoneEmulator({
             <button 
               onClick={() => {
                 setShowAlarmsDrawer(!showAlarmsDrawer);
-                playReminderSound();
+                if (alarms.some(a => a.type === 'STARTING')) {
+                  playWarningSound();
+                } else {
+                  playReminderSound();
+                }
               }}
               className="relative p-1 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-md transition-all flex items-center justify-center cursor-pointer"
               title="Alarms & Notifications"
@@ -679,99 +812,249 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Deploy New Challenge</h3>
-                  
-                  <form onSubmit={handleChallengeCreateSubmit} className="space-y-3.5 bg-[#1E293B] p-4 rounded-2xl border border-slate-800">
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Challenge Title</label>
-                      <input 
-                        type="text"
-                        className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
-                        placeholder="e.g. Daily LeetCode Challenge"
-                        value={newChalForm.title}
-                        onChange={e => setNewChalForm({...newChalForm, title: e.target.value})}
-                        maxLength={50}
-                        required
-                      />
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Deploy New Challenge</h3>
+                    <div className="text-[9px] bg-indigo-500/10 text-indigo-300 font-mono px-2 py-0.5 rounded-full border border-indigo-500/20">
+                      BETZ Lab
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staking Description</label>
-                      <textarea 
-                        className="w-full h-16 bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 resize-none"
-                        placeholder="Detail exactly what researchers must log to prove completion."
-                        value={newChalForm.description}
-                        onChange={e => setNewChalForm({...newChalForm, description: e.target.value})}
-                        maxLength={180}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Category</label>
-                        <select
-                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                          value={newChalForm.category}
-                          onChange={e => setNewChalForm({...newChalForm, category: e.target.value})}
-                        >
-                          <option value="Fitness">Fitness</option>
-                          <option value="Coding">Coding</option>
-                          <option value="Research">Research</option>
-                          <option value="Nutrition">Nutrition</option>
-                          <option value="Mental">Mental</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staked Reward</label>
-                        <select
-                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                          value={newChalForm.reward_xp}
-                          onChange={e => setNewChalForm({...newChalForm, reward_xp: Number(e.target.value)})}
-                        >
-                          <option value={100}>100 XP</option>
-                          <option value={150}>150 XP</option>
-                          <option value={200}>200 XP</option>
-                          <option value={300}>300 XP</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Duration Days</label>
-                      <select
-                        className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
-                        value={newChalForm.duration_days}
-                        onChange={e => setNewChalForm({...newChalForm, duration_days: Number(e.target.value)})}
-                      >
-                        <option value={3}>3 Days Stakes</option>
-                        <option value={5}>5 Days Stakes</option>
-                        <option value={7}>7 Days Stakes</option>
-                        <option value={10}>10 Days Stakes</option>
-                      </select>
-                    </div>
-
-                    {createError && (
-                      <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs font-mono">
-                        {createError}
-                      </div>
-                    )}
-
-                    {createSuccess && (
-                      <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-mono">
-                        Challenge broadcasted!
-                      </div>
-                    )}
-
-                    <button 
-                      type="submit" 
-                      className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 text-xs font-mono font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5"
+                  {/* Mode Toggle Selector */}
+                  <div className="flex bg-[#1E293B] p-1 rounded-xl border border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setCreateMode('MANUAL')}
+                      className={`flex-1 text-center py-1.5 text-[10px] font-mono font-bold rounded-lg transition-all ${
+                        createMode === 'MANUAL'
+                          ? 'bg-indigo-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
                     >
-                      <PlusCircle className="w-4 h-4" />
-                      Commit Staking Ledger
+                      Manual Setup
                     </button>
-                  </form>
+                    <button
+                      type="button"
+                      onClick={() => setCreateMode('RESEARCH')}
+                      className={`flex-1 text-center py-1.5 text-[10px] font-mono font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                        createMode === 'RESEARCH'
+                          ? 'bg-indigo-600 text-white shadow-md'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                      Find Friend Lab
+                    </button>
+                  </div>
+                  
+                  {createMode === 'RESEARCH' ? (
+                    <div className="space-y-4">
+                      {researchSuccess ? (
+                        <motion.div
+                          initial={{ scale: 0.95, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="bg-emerald-950/40 border border-emerald-500/20 p-4 rounded-2xl space-y-3.5 text-center"
+                        >
+                          <div className="inline-flex p-3 bg-emerald-500/10 rounded-full text-emerald-400 mb-1">
+                            <CheckCircle className="w-8 h-8 animate-bounce" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-emerald-300 font-mono">Matched Successfully!</h4>
+                            <p className="text-[10px] text-emerald-400/80 mt-1">Staking contract created with your new friend.</p>
+                          </div>
+
+                          <div className="bg-slate-900/60 p-3 rounded-xl border border-emerald-500/10 text-left space-y-2">
+                            <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                              <span>{researchSuccess.challenge.title}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-300">{researchSuccess.challenge.description}</p>
+                            <div className="flex gap-2 text-[9px] font-mono text-slate-400 pt-1.5 border-t border-slate-800">
+                              <span>Reward: <strong className="text-amber-400">{researchSuccess.challenge.reward_xp} XP</strong></span>
+                              <span>•</span>
+                              <span>Duration: <strong className="text-slate-200">{researchSuccess.challenge.duration_days} Days</strong></span>
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-900/40 p-3 rounded-xl border border-indigo-500/10 text-left">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-indigo-400 font-bold mb-1">Accountability Friend</div>
+                            <div className="text-xs font-bold text-slate-200 font-mono">@{researchSuccess.challenger.username}</div>
+                            <p className="text-[10px] text-slate-400 italic mt-0.5">"{researchSuccess.bio}"</p>
+                          </div>
+
+                          <div className="text-[10px] text-slate-500 font-mono animate-pulse">
+                            Returning to Lobby in 5 seconds...
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <form onSubmit={handleResearchSubmit} className="space-y-4 bg-[#1E293B] p-4 rounded-2xl border border-slate-800">
+                          <div className="space-y-1">
+                            <h4 className="text-xs font-bold text-indigo-300 font-mono flex items-center gap-1.5">
+                              <UserPlus className="w-4 h-4 text-amber-400" />
+                              Match with a New Friend
+                            </h4>
+                            <p className="text-[10px] text-slate-400 leading-normal">
+                              Enter any interest, habit, or goal (e.g. "Morning jogging", "Swift coding", "Cold exposure"). Our matchmaking system will research and find a new accountability friend who shares this focus, design a custom staking contract, and instantly enroll you both!
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Search Habit or Interest</label>
+                            <div className="relative">
+                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                              <input 
+                                type="text"
+                                className="w-full bg-[#0F172A] border border-slate-700 rounded-full pl-9 pr-24 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-mono"
+                                placeholder="e.g. cold plunge or morning yoga"
+                                value={researchTopic}
+                                onChange={e => setResearchTopic(e.target.value)}
+                                maxLength={40}
+                                required
+                                disabled={researchLoading}
+                              />
+                              <button
+                                type="submit"
+                                disabled={researchLoading || !researchTopic.trim()}
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-[10px] font-mono font-bold rounded-full transition-all"
+                              >
+                                {researchLoading ? 'Searching...' : 'Search'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {researchError && (
+                            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs font-mono">
+                              {researchError}
+                            </div>
+                          )}
+
+                          <button
+                            type="submit"
+                            disabled={researchLoading || !researchTopic.trim()}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white rounded-xl py-2.5 text-xs font-mono font-semibold shadow-lg transition-all flex items-center justify-center gap-2"
+                          >
+                            {researchLoading ? (
+                              <>
+                                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                                Finding Friend & Contract...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4 text-amber-300" />
+                                Find Friend & Start Challenge
+                              </>
+                            )}
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  ) : (
+                    <form onSubmit={handleChallengeCreateSubmit} className="space-y-3.5 bg-[#1E293B] p-4 rounded-2xl border border-slate-800">
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Challenge Title</label>
+                        <input 
+                          type="text"
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                          placeholder="e.g. Daily LeetCode Challenge"
+                          value={newChalForm.title}
+                          onChange={e => setNewChalForm({...newChalForm, title: e.target.value})}
+                          maxLength={50}
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staking Description</label>
+                        <textarea 
+                          className="w-full h-16 bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 resize-none"
+                          placeholder="Detail exactly what researchers must log to prove completion."
+                          value={newChalForm.description}
+                          onChange={e => setNewChalForm({...newChalForm, description: e.target.value})}
+                          maxLength={180}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Category</label>
+                          <select
+                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                            value={newChalForm.category}
+                            onChange={e => setNewChalForm({...newChalForm, category: e.target.value})}
+                          >
+                            <option value="Fitness">Fitness</option>
+                            <option value="Coding">Coding</option>
+                            <option value="Research">Research</option>
+                            <option value="Nutrition">Nutrition</option>
+                            <option value="Mental">Mental</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staked Reward</label>
+                          <select
+                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                            value={newChalForm.reward_xp}
+                            onChange={e => setNewChalForm({...newChalForm, reward_xp: Number(e.target.value)})}
+                          >
+                            <option value={100}>100 XP</option>
+                            <option value={150}>150 XP</option>
+                            <option value={200}>200 XP</option>
+                            <option value={300}>300 XP</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Duration Days</label>
+                        <select
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          value={newChalForm.duration_days}
+                          onChange={e => setNewChalForm({...newChalForm, duration_days: Number(e.target.value)})}
+                        >
+                          <option value={3}>3 Days Stakes</option>
+                          <option value={5}>5 Days Stakes</option>
+                          <option value={7}>7 Days Stakes</option>
+                          <option value={10}>10 Days Stakes</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Starts In</label>
+                        <select
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          value={newChalForm.starts_in_hours}
+                          onChange={e => setNewChalForm({...newChalForm, starts_in_hours: Number(e.target.value)})}
+                        >
+                          <option value={1}>1 Hour (Triggers Warning Alarm)</option>
+                          <option value={2}>2 Hours</option>
+                          <option value={12}>12 Hours</option>
+                          <option value={24}>24 Hours</option>
+                          <option value={0}>Starts Immediately</option>
+                        </select>
+                      </div>
+
+                      {createError && (
+                        <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs font-mono">
+                          {createError}
+                        </div>
+                      )}
+
+                      {createSuccess && (
+                        <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-mono">
+                          Challenge broadcasted!
+                        </div>
+                      )}
+
+                      <button 
+                        type="submit" 
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 text-xs font-mono font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <PlusCircle className="w-4 h-4" />
+                        Commit Staking Ledger
+                      </button>
+                    </form>
+                  )}
                 </motion.div>
               )}
 
@@ -785,7 +1068,7 @@ export default function PhoneEmulator({
                   className="space-y-4"
                 >
                   <div className="flex items-center justify-between pb-1">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Researcher Ledger</h3>
+                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Researcher Leaderboard</h3>
                     <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">Ranked by Staked XP</span>
                   </div>
 
@@ -1070,6 +1353,35 @@ export default function PhoneEmulator({
                   <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
                   Test Failure
                 </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/system/simulate-start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser?.id })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        playWarningSound();
+                        setActiveBanner({
+                          type: 'STARTING',
+                          title: '⏰ UPCOMING CHALLENGE ALARM',
+                          msg: `Alarm: An upcoming staking challenge starts in exactly 1 hour! Get ready to perform your logged activities.`
+                        });
+                      } else {
+                        alert(data.error || 'Simulation error');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="col-span-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg py-1.5 px-2 text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Bell className="w-3.5 h-3.5 text-indigo-400 animate-bounce" />
+                  Test Challenge Start Alarm (1 Hour)
+                </button>
               </div>
             </div>
 
@@ -1146,6 +1458,29 @@ export default function PhoneEmulator({
                   </button>
                 </div>
               </div>
+            ) : activeBanner.type === 'STARTING' ? (
+              <div className="space-y-6">
+                <div className="inline-flex p-4 bg-indigo-500/20 border border-indigo-500 rounded-full animate-bounce">
+                  <Bell className="w-12 h-12 text-indigo-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black font-mono text-indigo-400 tracking-wider">CHALLENGE START ALARM</h3>
+                  <p className="text-xs text-indigo-400 font-mono uppercase">starting in 1 hour</p>
+                </div>
+                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl max-w-[280px]">
+                  <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                    {activeBanner.msg}
+                  </p>
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setActiveBanner(null)}
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 cursor-pointer"
+                  >
+                    Lock and Load (I'm Ready)
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="space-y-6">
                 <div className="inline-flex p-4 bg-amber-500/20 border border-amber-500 rounded-full animate-pulse">
@@ -1215,7 +1550,7 @@ export default function PhoneEmulator({
             }`}
           >
             <Trophy className="w-4 h-4" />
-            <span className="text-[8px] font-mono font-medium mt-1">Ledger</span>
+            <span className="text-[8px] font-mono font-medium mt-1">Leaderboard</span>
           </button>
 
           <button 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Database, RefreshCw, Trash2, Cpu, FileText, Check, AlertTriangle, 
-  Terminal, ShieldCheck, HelpCircle, Users, Layers, Star 
+  Terminal, ShieldCheck, HelpCircle, Users, Layers, Star, Bell
 } from 'lucide-react';
 import { User, Challenge, UserChallenge, CheckIn, Verification, SystemLog } from '../types';
 
@@ -35,6 +35,7 @@ export default function SandboxCockpit({
   const [isRunningCron, setIsRunningCron] = useState(false);
   const [isSimulatingFail, setIsSimulatingFail] = useState(false);
   const [isSimulatingReminder, setIsSimulatingReminder] = useState(false);
+  const [isSimulatingStart, setIsSimulatingStart] = useState(false);
 
   const handleCronAdvance = async () => {
     setIsRunningCron(true);
@@ -92,6 +93,30 @@ export default function SandboxCockpit({
     }
   };
 
+  const handleSimulateStart = async () => {
+    const activeUser = dbState.users.find(u => u.username === activeUsername.toLowerCase());
+    if (!activeUser) {
+      alert('Please log in or select an active user to simulate challenge start alarm.');
+      return;
+    }
+    setIsSimulatingStart(true);
+    try {
+      const res = await fetch('/api/system/simulate-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: activeUser.id })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Simulation error');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSimulatingStart(false);
+    }
+  };
+
   return (
     <div className="bg-slate-900 text-slate-100 rounded-3xl p-6 border border-slate-800 shadow-xl flex flex-col h-full gap-6">
       
@@ -146,12 +171,22 @@ export default function SandboxCockpit({
               <AlertTriangle className={`w-3.5 h-3.5 ${isSimulatingFail ? 'animate-pulse' : ''}`} />
               Sim Failure
             </button>
+
+            <button
+              onClick={handleSimulateStart}
+              disabled={isSimulatingStart}
+              className="col-span-2 px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              title="Simulate challenge starting in 1 hour alarm"
+            >
+              <Bell className={`w-3.5 h-3.5 ${isSimulatingStart ? 'animate-bounce' : ''}`} />
+              Sim Start Alarm (starts in 1 hour)
+            </button>
           </div>
 
           <div className="text-[10px] text-slate-400 font-mono flex items-start gap-1.5 leading-normal bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
             <span>
-              <strong>Alarms Ready:</strong> Trigger <strong>Sim Reminder</strong> to notify pending daily accountability tasks, or <strong>Sim Failure</strong> to trigger a dramatic missed stake alert & XP slash event!
+              <strong>Alarms Ready:</strong> Trigger <strong>Sim Start Alarm</strong> to test warning 1 hour before start, <strong>Sim Reminder</strong> for checklist reminders, or <strong>Sim Failure</strong> to slash stakes!
             </span>
           </div>
         </div>
