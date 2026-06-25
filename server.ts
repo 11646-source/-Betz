@@ -700,7 +700,10 @@ async function startServer() {
     const chal = db.challenges[db.challenges.length - 1] || db.challenges[0];
 
     if (chal && user) {
-      addLog('ALARM_START_SOON', `⏰ UPCOMING ALARM: "${chal.title}" starts in 1 hour! Challenger @${user.username}, make sure you are ready to log proof!`);
+      // Dynamically set start_time to 45 minutes in the future so that the frontend's automated alarm fires instantly!
+      chal.start_time = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+      
+      addLog('ALARM_START_SOON', `⏰ UPCOMING ALARM: "${chal.title}" starts in 45 minutes! Challenger @${user.username}, make sure you are ready to log proof!`);
       return res.json({
         success: true,
         message: `Starting soon alarm broadcasted for "${chal.title}".`,

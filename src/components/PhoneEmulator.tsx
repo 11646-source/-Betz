@@ -137,8 +137,111 @@ export default function PhoneEmulator({
   
   // Alarms and Warning States
   const [showAlarmsDrawer, setShowAlarmsDrawer] = useState(false);
-  const [activeBanner, setActiveBanner] = useState<{ type: 'REMINDER' | 'LOST' | 'STARTING'; title: string; msg: string } | null>(null);
+  const [activeBanner, setActiveBanner] = useState<{ id?: string; type: 'REMINDER' | 'LOST' | 'STARTING'; title: string; msg: string } | null>(null);
   const [alarms, setAlarms] = useState<any[]>([]);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [dismissedAlarms, setDismissedAlarms] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('betz_dismissed_alarms');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const dismissAlarm = (alarmId: string) => {
+    setDismissedAlarms(prev => {
+      const next = [...prev, alarmId];
+      try {
+        localStorage.setItem('betz_dismissed_alarms', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+  };
+
+  // Ticking currentTime interval to evaluate alarms automatically
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 5000); // Check every 5 seconds for robust automatic alarms
+    return () => clearInterval(timer);
+  }, []);
+
+  // Toast Notifications States
+  const [toasts, setToasts] = useState<any[]>([]);
+  const [knownChallengeIds, setKnownChallengeIds] = useState<string[]>([]);
+  const [knownUserChallengeIds, setKnownUserChallengeIds] = useState<string[]>([]);
+  const [isToastInitialized, setIsToastInitialized] = useState(false);
+
+  // Reset tracking on user switch
+  useEffect(() => {
+    setIsToastInitialized(false);
+    setKnownChallengeIds([]);
+    setKnownUserChallengeIds([]);
+    setDismissedAlarms([]);
+    try {
+      localStorage.removeItem('betz_dismissed_alarms');
+    } catch (e) {}
+  }, [currentUser?.id]);
+
+  // Track new challenges and user enrollment notifications
+  useEffect(() => {
+    if (!currentUser) return;
+
+    if (!isToastInitialized) {
+      if (challenges.length > 0 || userChallenges.length > 0) {
+        setKnownChallengeIds(challenges.map(c => c.id));
+        setKnownUserChallengeIds(userChallenges.map(uc => uc.id));
+        setIsToastInitialized(true);
+      }
+      return;
+    }
+
+    // 1. Check for new global challenges
+    const newGlobal = challenges.filter(c => !knownChallengeIds.includes(c.id));
+    if (newGlobal.length > 0) {
+      const addedToasts = newGlobal.map(c => ({
+        id: `global-${c.id}-${Date.now()}`,
+        type: 'global_challenge',
+        title: '📢 New Challenge Broadcasted!',
+        message: `"${c.title}" is now active in the Lobby! Tap to view/stake.`,
+        linkToTab: 'DISCOVER' as const
+      }));
+      setToasts(prev => [...prev, ...addedToasts]);
+      playReminderSound();
+      setKnownChallengeIds(challenges.map(c => c.id));
+    }
+
+    // 2. Check for new enrolled challenges for the user
+    const newUserChal = userChallenges.filter(uc => !knownUserChallengeIds.includes(uc.id));
+    if (newUserChal.length > 0) {
+      const addedToasts = newUserChal.map(uc => {
+        const chalTitle = uc.challenge?.title || 'Habit Staking';
+        return {
+          id: `enrolled-${uc.id}-${Date.now()}`,
+          type: 'enrolled_challenge',
+          title: '🏆 New Challenge Assigned!',
+          message: `You got enrolled in "${chalTitle}"! Tap to open check-in feed.`,
+          linkToTab: 'FEED' as const
+        };
+      });
+      setToasts(prev => [...prev, ...addedToasts]);
+      playAlarmSound();
+      setKnownUserChallengeIds(userChallenges.map(uc => uc.id));
+    }
+  }, [challenges, userChallenges, isToastInitialized, currentUser, knownChallengeIds, knownUserChallengeIds]);
+
+  // Auto-remove toasts after 8 seconds
+  useEffect(() => {
+    if (toasts.length > 0) {
+      const timer = setTimeout(() => {
+        setToasts(prev => prev.slice(1));
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [toasts]);
 
   // Generate real-time alarms from user enrollment states
   useEffect(() => {
@@ -176,7 +279,7 @@ export default function PhoneEmulator({
     challenges.forEach(chal => {
       if (chal.start_time) {
         const startMs = new Date(chal.start_time).getTime();
-        const nowMs = Date.now();
+        const nowMs = currentTime;
         const diffMs = startMs - nowMs;
         const diffMins = diffMs / (60 * 1000);
 
@@ -195,35 +298,87 @@ export default function PhoneEmulator({
     });
 
     setAlarms(newAlarms);
-  }, [userChallenges, challenges, currentUser]);
+  }, [userChallenges, challenges, currentUser, currentTime]);
 
   // Automatically trigger sound and full-screen overlay when a new starting-soon warning alarm is active
-  const [lastStartingCount, setLastStartingCount] = useState(0);
   useEffect(() => {
-    const startingAlarms = alarms.filter(a => a.type === 'STARTING');
-    if (startingAlarms.length > lastStartingCount) {
-      const lastAlarm = startingAlarms[startingAlarms.length - 1];
-      setActiveBanner({
-        type: 'STARTING',
-        title: lastAlarm.title,
-        msg: lastAlarm.message
-      });
+    const startingAlarms = alarms.filter(a => a.type === 'STARTING' && !dismissedAlarms.includes(a.id));
+    if (startingAlarms.length > 0) {
+      const activeAlarm = startingAlarms[0];
+      if (!activeBanner || activeBanner.id !== activeAlarm.id) {
+        setActiveBanner({
+          id: activeAlarm.id,
+          type: 'STARTING',
+          title: activeAlarm.title,
+          msg: activeAlarm.message
+        });
+      }
+    } else {
+      if (activeBanner?.type === 'STARTING') {
+        setActiveBanner(null);
+      }
     }
-    setLastStartingCount(startingAlarms.length);
-  }, [alarms, lastStartingCount]);
+  }, [alarms, dismissedAlarms, activeBanner]);
 
-  // Continuous loop trigger when the starting warning overlay is active
+  // Continuous loop trigger when the starting warning overlay is active (Continuous Ringtone)
   useEffect(() => {
-    if (activeBanner?.type === 'STARTING') {
+    if (activeBanner?.type !== 'STARTING') return;
+
+    let audioCtx: AudioContext | null = null;
+    let intervalId: any = null;
+
+    try {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      let toggle = false;
+      const playTone = () => {
+        if (!audioCtx || audioCtx.state === 'suspended') return;
+        const now = audioCtx.currentTime;
+        
+        // Setup two oscillators for a rich, dual-tone alarm ringtone
+        const o1 = audioCtx.createOscillator();
+        const o2 = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        
+        o1.type = 'sine';
+        o2.type = 'triangle';
+        
+        // Alternating high/low siren notes to sound like an urgent alarm ringtone
+        const freq = toggle ? 587.33 : 880.00; // Alternates D5 / A5
+        toggle = !toggle;
+        
+        o1.frequency.setValueAtTime(freq, now);
+        o2.frequency.setValueAtTime(freq * 1.5, now); // Perfect fifth harmony for depth
+        
+        g.gain.setValueAtTime(0.0, now);
+        g.gain.linearRampToValueAtTime(0.06, now + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        
+        o1.connect(g);
+        o2.connect(g);
+        g.connect(audioCtx.destination);
+        
+        o1.start(now);
+        o2.start(now);
+        o1.stop(now + 0.5);
+        o2.stop(now + 0.5);
+      };
+
       // Play immediately
-      playWarningSound();
-      
-      const interval = setInterval(() => {
-        playWarningSound();
-      }, 1500);
-      
-      return () => clearInterval(interval);
+      playTone();
+      // Repeat rapidly (every 600ms) for a continuous, urgent, rhythmic alarm sound!
+      intervalId = setInterval(playTone, 600);
+
+    } catch (e) {
+      console.warn('Continuous ringtone audio error:', e);
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
+      }
+    };
   }, [activeBanner]);
   
   // Auth state inputs
@@ -373,6 +528,62 @@ export default function PhoneEmulator({
   return (
     <div className="w-[360px] h-[720px] bg-[#0F172A] rounded-[48px] border-[10px] border-[#334155] shadow-2xl relative flex flex-col overflow-hidden select-none">
       
+      {/* Floating In-App Toast Notifications Overlay Stack */}
+      <div className="absolute top-[72px] left-3 right-3 z-50 pointer-events-none space-y-2">
+        <AnimatePresence>
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => {
+                if (toast.linkToTab) {
+                  setActiveTab(toast.linkToTab);
+                }
+                setToasts(prev => prev.filter(t => t.id !== toast.id));
+              }}
+              className="pointer-events-auto bg-slate-900/95 border border-indigo-500/30 backdrop-blur-md rounded-2xl p-3 shadow-xl shadow-slate-950/50 flex gap-2.5 cursor-pointer hover:bg-slate-850 transition-all group"
+            >
+              <div className="flex-shrink-0 flex items-center justify-center">
+                {toast.type === 'enrolled_challenge' ? (
+                  <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+                    <Trophy className="w-3.5 h-3.5 animate-bounce" />
+                  </div>
+                ) : (
+                  <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
+                    <Bell className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-bold text-slate-200 group-hover:text-white flex justify-between items-center font-mono">
+                  <span>{toast.title}</span>
+                  <span className="text-[8px] text-slate-500 font-normal">now</span>
+                </div>
+                <p className="text-[9.5px] text-slate-400 leading-snug mt-0.5 font-sans break-words pr-2">
+                  {toast.message}
+                </p>
+                <div className="text-[9px] font-mono font-medium text-indigo-400 mt-1 flex items-center gap-0.5 group-hover:text-indigo-300">
+                  <span>Tap to view</span>
+                  <ChevronRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setToasts(prev => prev.filter(t => t.id !== toast.id));
+                }}
+                className="flex-shrink-0 text-slate-500 hover:text-slate-300 self-start p-0.5"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
       {/* Top Phone Notch / Speaker & Camera details */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#334155] rounded-b-2xl z-50 flex items-center justify-center">
         <div className="w-12 h-1 bg-[#1E293B] rounded-full absolute top-1.5" />
@@ -420,7 +631,7 @@ export default function PhoneEmulator({
               <div className="inline-flex p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20 mb-3">
                 <EBLogo className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-xl font-bold tracking-tight">Access BETZ Ledger</h2>
+              <h2 className="text-xl font-bold tracking-tight">Access betz app</h2>
               <p className="text-xs text-slate-400 mt-1">Social habits staking & verification engine</p>
             </div>
 
@@ -898,7 +1109,7 @@ export default function PhoneEmulator({
                           </div>
 
                           <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Search Habit or Interest</label>
+                            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Find Friend</label>
                             <div className="relative">
                               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                               <input 
@@ -1474,10 +1685,16 @@ export default function PhoneEmulator({
                 </div>
                 <div className="pt-4">
                   <button
-                    onClick={() => setActiveBanner(null)}
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/30 cursor-pointer"
+                    onClick={() => {
+                      if (activeBanner.id) {
+                        dismissAlarm(activeBanner.id);
+                      }
+                      setActiveBanner(null);
+                    }}
+                    className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold rounded-xl transition-all shadow-lg shadow-rose-600/30 cursor-pointer flex items-center justify-center gap-1.5 mx-auto"
                   >
-                    Lock and Load (I'm Ready)
+                    <Volume2 className="w-3.5 h-3.5" />
+                    Stop Alarm & Dismiss
                   </button>
                 </div>
               </div>

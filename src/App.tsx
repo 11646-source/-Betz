@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { User, Challenge, CheckIn, Verification, SystemLog } from './types';
 import PhoneEmulator from './components/PhoneEmulator';
 import SandboxCockpit from './components/SandboxCockpit';
-import { Cpu } from 'lucide-react';
+import { Cpu, LogOut } from 'lucide-react';
 import EBLogo from './components/EBLogo';
+import AuthPage from './components/AuthPage';
 
 export default function App() {
   // Global React States
@@ -39,11 +40,13 @@ export default function App() {
   useEffect(() => {
     const savedUser = localStorage.getItem('betz_user');
     const savedToken = localStorage.getItem('betz_token');
+    const explicitlyLoggedOut = localStorage.getItem('betz_logged_out') === 'true';
+
     if (savedUser && savedToken) {
       setCurrentUser(JSON.parse(savedUser));
       setToken(savedToken);
-    } else {
-      // Default auto-login as first researcher (Yannick) to lower entrance friction
+    } else if (!explicitlyLoggedOut) {
+      // Default auto-login as first researcher (Yannick) to lower entrance friction on very first land
       const defaultMockUser = {
         id: 'yc745fbf-4076-4767-8919-48227e7ca4b1',
         username: 'yannick',
@@ -104,8 +107,11 @@ export default function App() {
               email: freshUser.email,
               total_xp: freshUser.total_xp
             };
-            setCurrentUser(updated);
-            localStorage.setItem('betz_user', JSON.stringify(updated));
+            // Safely guard against stale async closures after logout
+            if (localStorage.getItem('betz_user')) {
+              setCurrentUser(updated);
+              localStorage.setItem('betz_user', JSON.stringify(updated));
+            }
           }
         }
       }
@@ -154,6 +160,7 @@ export default function App() {
     if (!res.ok) {
       throw new Error(data.error || 'Registration failed');
     }
+    localStorage.removeItem('betz_logged_out');
     setCurrentUser(data.user);
     setToken(data.token);
     localStorage.setItem('betz_user', JSON.stringify(data.user));
@@ -171,6 +178,7 @@ export default function App() {
     if (!res.ok) {
       throw new Error(data.error || 'Login checkout rejected');
     }
+    localStorage.removeItem('betz_logged_out');
     setCurrentUser(data.user);
     setToken(data.token);
     localStorage.setItem('betz_user', JSON.stringify(data.user));
@@ -179,6 +187,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    localStorage.setItem('betz_logged_out', 'true');
     setCurrentUser(null);
     setToken(null);
     localStorage.removeItem('betz_user');
@@ -195,6 +204,7 @@ export default function App() {
       });
       const data = await res.json();
       if (res.ok) {
+        localStorage.removeItem('betz_logged_out');
         setCurrentUser(data.user);
         setToken(data.token);
         localStorage.setItem('betz_user', JSON.stringify(data.user));
@@ -352,6 +362,24 @@ export default function App() {
 
           {/* Academic and project details */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-2 bg-slate-50 rounded-xl border border-slate-200 text-right md:-mr-2 font-mono text-[11px] text-slate-600">
+            {currentUser && (
+              <div className="flex items-center gap-2 bg-indigo-50/80 border border-indigo-100 px-3 py-1 rounded-xl text-left">
+                <div className="h-5 w-5 bg-indigo-600 rounded-full text-white font-bold flex items-center justify-center text-[9px] uppercase font-sans shrink-0">
+                  {currentUser.username[0]}
+                </div>
+                <div className="leading-none shrink-0">
+                  <span className="text-slate-400 block text-[7px] uppercase tracking-wider font-extrabold">Active</span>
+                  <span className="text-indigo-600 font-bold font-sans text-[11px]">@{currentUser.username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 px-2 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 text-[10px] font-sans font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <LogOut className="w-3 h-3 text-slate-400" />
+                  Sign Out
+                </button>
+              </div>
+            )}
             <div>
               <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-bold">Environment Target</span>
               <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px]">PROD_VER_2026.1</span>
@@ -365,55 +393,61 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main double column cockpit area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        
-        {/* Left Side: Physical Phone Simulator Frame (Light Polish accent) */}
-        <section className="lg:col-span-5 flex flex-col items-center justify-center">
-          <div className="text-center mb-4 block lg:hidden">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest font-mono">Interactive Client Emulator</span>
+      {/* Main double column cockpit area or Login/Register Page */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-8 flex flex-col justify-center items-center">
+        {!currentUser ? (
+          <div className="w-full py-4 animate-fade-in">
+            <AuthPage onLogin={handleLogin} onRegister={handleRegister} />
           </div>
-          <PhoneEmulator
-            currentUser={currentUser}
-            challenges={challenges}
-            feed={feed}
-            userChallenges={userChallenges}
-            leaderboard={leaderboard}
-            onRegister={handleRegister}
-            onLogin={handleLogin}
-            onJoinChallenge={handleJoinChallenge}
-            onCreateChallenge={handleCreateChallenge}
-            onSubmitCheckin={handleSubmitCheckin}
-            onCastVote={handleCastVote}
-            onLogout={handleLogout}
-          />
-        </section>
+        ) : (
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            {/* Left Side: Physical Phone Simulator Frame (Light Polish accent) */}
+            <section className="lg:col-span-5 flex flex-col items-center justify-center">
+              <div className="text-center mb-4 block lg:hidden">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest font-mono">Interactive Client Emulator</span>
+              </div>
+              <PhoneEmulator
+                currentUser={currentUser}
+                challenges={challenges}
+                feed={feed}
+                userChallenges={userChallenges}
+                leaderboard={leaderboard}
+                onRegister={handleRegister}
+                onLogin={handleLogin}
+                onJoinChallenge={handleJoinChallenge}
+                onCreateChallenge={handleCreateChallenge}
+                onSubmitCheckin={handleSubmitCheckin}
+                onCastVote={handleCastVote}
+                onLogout={handleLogout}
+              />
+            </section>
 
-        {/* Right Side: PostgreSQL Explorer & Server Operations Terminal */}
-        <section className="lg:col-span-7 flex flex-col">
-          <div className="mb-4 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
-              <Cpu className="w-4 h-4 text-indigo-500 animate-spin" />
-              Relational Transaction Engine
-            </span>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-              <span>Engine Status: ONLINE</span>
-            </div>
+            {/* Right Side: PostgreSQL Explorer & Server Operations Terminal */}
+            <section className="lg:col-span-7 flex flex-col">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-indigo-500 animate-spin" />
+                  Relational Transaction Engine
+                </span>
+                <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  <span>Engine Status: ONLINE</span>
+                </div>
+              </div>
+              <div className="flex-1 min-h-[560px]">
+                <SandboxCockpit
+                  logs={logs}
+                  dbState={dbState}
+                  onTriggerClockReset={handleTriggerClockReset}
+                  onResetSandbox={handleResetSandbox}
+                  onClearLogs={handleClearLogs}
+                  onUserSelected={handleQuickSwitchUser}
+                  activeUsername={currentUser?.username || ''}
+                />
+              </div>
+            </section>
           </div>
-          <div className="flex-1 min-h-[560px]">
-            <SandboxCockpit
-              logs={logs}
-              dbState={dbState}
-              onTriggerClockReset={handleTriggerClockReset}
-              onResetSandbox={handleResetSandbox}
-              onClearLogs={handleClearLogs}
-              onUserSelected={handleQuickSwitchUser}
-              activeUsername={currentUser?.username || ''}
-            />
-          </div>
-        </section>
-
+        )}
       </main>
 
       {/* Footer Bar */}
