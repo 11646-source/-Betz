@@ -33,6 +33,8 @@ export default function SandboxCockpit({
   // Current active table view
   const [activeTable, setActiveTable] = useState<'users' | 'challenges' | 'user_challenges' | 'check_ins' | 'verifications'>('users');
   const [isRunningCron, setIsRunningCron] = useState(false);
+  const [isSimulatingFail, setIsSimulatingFail] = useState(false);
+  const [isSimulatingReminder, setIsSimulatingReminder] = useState(false);
 
   const handleCronAdvance = async () => {
     setIsRunningCron(true);
@@ -40,6 +42,54 @@ export default function SandboxCockpit({
     setTimeout(() => {
       setIsRunningCron(false);
     }, 800);
+  };
+
+  const handleSimulateFail = async () => {
+    const activeUser = dbState.users.find(u => u.username === activeUsername.toLowerCase());
+    if (!activeUser) {
+      alert('Please log in or select an active user to simulate challenge failure.');
+      return;
+    }
+    setIsSimulatingFail(true);
+    try {
+      const res = await fetch('/api/system/simulate-fail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: activeUser.id })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Simulation error');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSimulatingFail(false);
+    }
+  };
+
+  const handleSimulateReminder = async () => {
+    const activeUser = dbState.users.find(u => u.username === activeUsername.toLowerCase());
+    if (!activeUser) {
+      alert('Please log in or select an active user to simulate reminder alarm.');
+      return;
+    }
+    setIsSimulatingReminder(true);
+    try {
+      const res = await fetch('/api/system/simulate-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: activeUser.id })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Simulation error');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSimulatingReminder(false);
+    }
   };
 
   return (
@@ -59,29 +109,49 @@ export default function SandboxCockpit({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleCronAdvance}
               disabled={isRunningCron}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-md flex items-center justify-center gap-2 border border-indigo-500/30"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1 border border-indigo-500/30 cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 ${isRunningCron ? 'animate-spin' : ''}`} />
-              Simulate Validation Cron
+              <RefreshCw className={`w-3.5 h-3.5 ${isRunningCron ? 'animate-spin' : ''}`} />
+              Run Cron
             </button>
 
             <button
               onClick={onResetSandbox}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 border border-slate-700/60"
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 border border-slate-700/60 cursor-pointer"
             >
-              <Database className="w-4 h-4 text-emerald-400" />
-              Reset & Re-seed Tables
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              Reset DB
+            </button>
+
+            <button
+              onClick={handleSimulateReminder}
+              disabled={isSimulatingReminder}
+              className="px-4 py-2 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              title="Simulate challenge checklist reminder warning"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSimulatingReminder ? 'animate-spin' : ''}`} />
+              Sim Reminder
+            </button>
+
+            <button
+              onClick={handleSimulateFail}
+              disabled={isSimulatingFail}
+              className="px-4 py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              title="Simulate challenge failure / missed check-in log"
+            >
+              <AlertTriangle className={`w-3.5 h-3.5 ${isSimulatingFail ? 'animate-pulse' : ''}`} />
+              Sim Failure
             </button>
           </div>
 
           <div className="text-[10px] text-slate-400 font-mono flex items-start gap-1.5 leading-normal bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
             <span>
-              <strong>Note:</strong> Validation requires approvals from fellow researchers. Use <strong>Quick Operator Switch</strong> below to vote as Ryan or Nathanaël, or hit <strong>Simulate Validation Cron</strong> to auto-approve checkins.
+              <strong>Alarms Ready:</strong> Trigger <strong>Sim Reminder</strong> to notify pending daily accountability tasks, or <strong>Sim Failure</strong> to trigger a dramatic missed stake alert & XP slash event!
             </span>
           </div>
         </div>

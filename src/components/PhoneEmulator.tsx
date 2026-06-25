@@ -1,12 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, CheckCircle, Clock, Trophy, Award, LogIn, LogOut, 
   Check, X, ShieldCheck, PlusCircle, Activity, Calendar, UserPlus, 
-  ChevronRight, Send, User, Target, Layers
+  ChevronRight, Send, User, Target, Layers,
+  Bell, AlertTriangle, Volume2, Info
 } from 'lucide-react';
 import EBLogo from './EBLogo';
 import { Challenge, CheckIn, Verification } from '../types';
+
+// Synthesize sound effects using Web Audio API to bypass asset dependency
+const playAlarmSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc1.type = 'sawtooth';
+    osc2.type = 'sine';
+    
+    osc1.frequency.setValueAtTime(320, audioCtx.currentTime);
+    osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
+    
+    osc1.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 0.5);
+    osc2.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 0.5);
+    
+    gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+    
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    osc1.start();
+    osc2.start();
+    osc1.stop(audioCtx.currentTime + 0.6);
+    osc2.stop(audioCtx.currentTime + 0.6);
+  } catch (err) {
+    console.warn('Audio Context blocked or unsupported:', err);
+  }
+};
+
+const playReminderSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
+    
+    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.4);
+  } catch (err) {
+    console.warn('Audio Context blocked or unsupported:', err);
+  }
+};
 
 interface PhoneEmulatorProps {
   currentUser: {
@@ -44,6 +101,46 @@ export default function PhoneEmulator({
 }: PhoneEmulatorProps) {
   // Mobile UI screens: 'FEED', 'DISCOVER', 'CREATE', 'LEADERBOARD', 'PROFILE', 'AUTH_LOGIN', 'AUTH_REGISTER'
   const [activeTab, setActiveTab] = useState<'FEED' | 'DISCOVER' | 'CREATE' | 'LEADERBOARD' | 'PROFILE'>('FEED');
+  
+  // Alarms and Warning States
+  const [showAlarmsDrawer, setShowAlarmsDrawer] = useState(false);
+  const [activeBanner, setActiveBanner] = useState<{ type: 'REMINDER' | 'LOST'; title: string; msg: string } | null>(null);
+  const [alarms, setAlarms] = useState<any[]>([]);
+
+  // Generate real-time alarms from user enrollment states
+  useEffect(() => {
+    if (!currentUser) {
+      setAlarms([]);
+      return;
+    }
+
+    const newAlarms: any[] = [];
+
+    userChallenges.forEach(uc => {
+      const chalTitle = uc.challenge?.title || 'Habit Staking';
+      if (uc.status === 'FAILED') {
+        newAlarms.push({
+          id: `fail-${uc.id}`,
+          type: 'LOST',
+          title: 'CHALLENGE LOST! 💀',
+          message: `You failed to complete daily check-ins for "${chalTitle}". Staked XP was slashed.`,
+          timestamp: uc.enrolled_at,
+          severity: 'high'
+        });
+      } else if (uc.status === 'ACTIVE') {
+        newAlarms.push({
+          id: `remind-${uc.id}`,
+          type: 'REMINDER',
+          title: 'CHALLENGE PENDING! ⏰',
+          message: `Do not forget to log daily proof for "${chalTitle}" to avoid losing stakes!`,
+          timestamp: new Date().toISOString(),
+          severity: 'medium'
+        });
+      }
+    });
+
+    setAlarms(newAlarms);
+  }, [userChallenges, currentUser]);
   
   // Auth state inputs
   const [loginForm, setLoginForm] = useState({ usernameOrEmail: '', password: '123456' });
@@ -155,8 +252,25 @@ export default function PhoneEmulator({
 
       {/* Screen Header / Status Bar */}
       <header className="pt-7 px-6 pb-2 bg-[#1E293B] border-b border-[#334155] flex justify-between items-center text-slate-300 font-mono text-xs z-20">
-        <span>09:41</span>
-        <div className="flex items-center gap-1.5">
+        <span className="font-semibold text-slate-100">09:41</span>
+        <div className="flex items-center gap-2">
+          {currentUser && (
+            <button 
+              onClick={() => {
+                setShowAlarmsDrawer(!showAlarmsDrawer);
+                playReminderSound();
+              }}
+              className="relative p-1 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-md transition-all flex items-center justify-center cursor-pointer"
+              title="Alarms & Notifications"
+            >
+              <Bell className={`w-3.5 h-3.5 ${alarms.length > 0 ? 'text-amber-400 animate-bounce' : 'text-slate-400'}`} />
+              {alarms.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full text-[7px] w-3 h-3 font-bold flex items-center justify-center animate-pulse">
+                  {alarms.length}
+                </span>
+              )}
+            </button>
+          )}
           <span className="w-3.5 h-2 bg-[#10B981] rounded-sm inline-block"></span>
           <span className="text-[10px] font-bold text-emerald-400">5G</span>
           <EBLogo className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
@@ -869,6 +983,193 @@ export default function PhoneEmulator({
                 Broadcast Proof to Consensus
               </button>
             </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- FLOATING ALARMS & NOTIFICATION DRAWER --- */}
+      <AnimatePresence>
+        {showAlarmsDrawer && (
+          <motion.div 
+            initial={{ opacity: 0, y: -200 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -200 }}
+            className="absolute top-[52px] inset-x-0 bg-[#1E293B] border-b border-slate-700 rounded-b-3xl p-5 space-y-4 z-40 text-slate-100 shadow-2xl max-h-[500px] overflow-y-auto custom-scrollbar"
+          >
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-amber-400 animate-pulse" />
+                <h4 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Protocol Alarm Center</h4>
+              </div>
+              <button 
+                onClick={() => setShowAlarmsDrawer(false)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg bg-slate-800 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Simulated Live Alarm Actions */}
+            <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2.5">
+              <span className="text-[9px] uppercase font-bold text-slate-400 block font-mono">Simulate Edge States</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/system/simulate-reminder', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser?.id })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        playReminderSound();
+                        setActiveBanner({
+                          type: 'REMINDER',
+                          title: '⏰ REMINDER ALARM TRIGGERED',
+                          msg: `Outstanding checkpoint pending for active challenge. Do not forget to check in!`
+                        });
+                      } else {
+                        alert(data.error || 'Simulation error');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 rounded-lg py-1.5 px-2 text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  Test Reminder
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/system/simulate-fail', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser?.id })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        playAlarmSound();
+                        setActiveBanner({
+                          type: 'LOST',
+                          title: '💀 CHALLENGE LOST ALARM',
+                          msg: `Alarm: You missed your daily check-in. Staked XP slashed! You lost the challenge.`
+                        });
+                      } else {
+                        alert(data.error || 'No active challenge found to fail.');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className="bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-lg py-1.5 px-2 text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
+                  Test Failure
+                </button>
+              </div>
+            </div>
+
+            {/* Alarms Feed List */}
+            <div className="space-y-3.5">
+              <span className="text-[9px] uppercase font-bold text-indigo-400 block font-mono">Current Active Alarms ({alarms.length})</span>
+              
+              {alarms.length === 0 ? (
+                <div className="text-center py-6 bg-slate-900/30 rounded-xl border border-dashed border-slate-800 text-slate-500 text-[10px] font-mono">
+                  No active protocol warnings.
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+                  {alarms.map((alarm) => (
+                    <div 
+                      key={alarm.id} 
+                      className={`p-3 rounded-xl border flex flex-col gap-1 transition-all ${
+                        alarm.type === 'LOST' 
+                          ? 'bg-rose-950/40 border-rose-900 text-rose-100' 
+                          : 'bg-amber-950/30 border-amber-900 text-amber-100'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold font-mono tracking-wide uppercase flex items-center gap-1">
+                          {alarm.type === 'LOST' ? (
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 fill-current animate-pulse" />
+                          ) : (
+                            <Bell className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                          )}
+                          {alarm.title}
+                        </span>
+                        <span className="text-[8px] opacity-60 font-mono">Active</span>
+                      </div>
+                      <p className="text-[10px] opacity-90 leading-normal">{alarm.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* --- DRAMATIC FULL SCREEN ALARM BANNER OVERLAY --- */}
+      <AnimatePresence>
+        {activeBanner && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute inset-0 bg-[#020617]/95 z-50 flex flex-col justify-center items-center p-6 text-center select-none"
+          >
+            {activeBanner.type === 'LOST' ? (
+              <div className="space-y-6">
+                <div className="inline-flex p-4 bg-rose-500/20 border border-rose-500 rounded-full animate-bounce">
+                  <AlertTriangle className="w-12 h-12 text-rose-500 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black font-mono text-rose-500 tracking-wider">CHALLENGE LOST ALARM</h3>
+                  <p className="text-xs text-rose-400 font-mono uppercase">consensus staking check-in missed</p>
+                </div>
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl max-w-[280px]">
+                  <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                    {activeBanner.msg}
+                  </p>
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setActiveBanner(null)}
+                    className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-mono text-xs font-bold rounded-xl transition-all shadow-lg shadow-rose-600/30 cursor-pointer"
+                  >
+                    Acknowledge Slashed Penalty
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="inline-flex p-4 bg-amber-500/20 border border-amber-500 rounded-full animate-pulse">
+                  <Bell className="w-12 h-12 text-amber-400 animate-bounce" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black font-mono text-amber-400 tracking-wider">REMINDER WARNING</h3>
+                  <p className="text-xs text-amber-400 font-mono uppercase">active stakes pending check-in</p>
+                </div>
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl max-w-[280px]">
+                  <p className="text-xs text-slate-300 leading-relaxed font-mono">
+                    {activeBanner.msg}
+                  </p>
+                </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setActiveBanner(null)}
+                    className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/30 cursor-pointer"
+                  >
+                    Lock In Daily Proof Now
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

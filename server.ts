@@ -617,6 +617,72 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // Simulate missing/failing a challenge
+  app.post("/api/system/simulate-fail", (req, res) => {
+    const { userId, userChallengeId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    let uc = null;
+    if (userChallengeId) {
+      uc = db.user_challenges.find(u => u.id === userChallengeId && u.user_id === userId);
+    } else {
+      uc = db.user_challenges.find(u => u.user_id === userId && u.status === 'ACTIVE');
+    }
+
+    if (!uc) {
+      return res.status(404).json({ error: "No active challenge found to simulate failure." });
+    }
+
+    const chal = db.challenges.find(c => c.id === uc.challenge_id);
+    const user = db.users.find(u => u.id === userId);
+
+    if (uc && chal && user) {
+      uc.status = 'FAILED';
+      const penalty = Math.min(user.total_xp, 100);
+      user.total_xp -= penalty;
+      
+      addLog('CHALLENGE_FAILED', `💀 ALARM: @${user.username} lost the challenge "${chal.title}"! Failed to log daily check-in. -${penalty} Staked XP has been slashed!`);
+      
+      return res.json({ 
+        success: true, 
+        message: `Simulated failure for "${chal.title}".`,
+        userChallenge: uc,
+        penalty
+      });
+    }
+
+    res.status(400).json({ error: "Could not process simulation." });
+  });
+
+  // Simulate a reminder for a challenge to do
+  app.post("/api/system/simulate-reminder", (req, res) => {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required." });
+    }
+
+    const uc = db.user_challenges.find(u => u.user_id === userId && u.status === 'ACTIVE');
+    const user = db.users.find(u => u.id === userId);
+
+    if (!uc) {
+      return res.status(404).json({ error: "No active challenge found to remind." });
+    }
+
+    const chal = db.challenges.find(c => c.id === uc.challenge_id);
+    if (chal && user) {
+      addLog('ALARM_REMINDER', `⏰ ALARM: @${user.username} has an outstanding checkpoint to complete for "${chal.title}"! Due in 2 hours.`);
+      return res.json({
+        success: true,
+        message: `Alarm reminder broadcasted for "${chal.title}".`,
+        challengeTitle: chal.title
+      });
+    }
+
+    res.status(400).json({ error: "Could not process reminder simulation." });
+  });
+
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
