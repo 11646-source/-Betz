@@ -12,7 +12,9 @@ import {
   EyeOff, 
   Users, 
   Trophy, 
-  Coins 
+  Coins,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import EBLogo from './EBLogo';
 
@@ -23,6 +25,7 @@ interface AuthPageProps {
 
 export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [videoMuted, setVideoMuted] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -128,21 +131,53 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
     <div id="auth-page-root" className="min-h-[580px] bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 max-w-5xl w-full mx-auto">
       
       {/* Column 1: Informative / Value Proposition (Left Panel) */}
-      <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-[#1E293B] to-slate-950 p-8 flex flex-col justify-between text-slate-200 relative overflow-hidden">
+      <div className="lg:col-span-5 bg-slate-950 p-8 flex flex-col justify-between text-slate-200 relative overflow-hidden">
+        {/* Full-screen looping background campaign video */}
+        <video 
+          src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+          autoPlay 
+          muted={videoMuted} 
+          loop 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-[0.25] hover:opacity-[0.38] transition-opacity duration-1000 mix-blend-screen"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/60 to-slate-950/90 pointer-events-none" />
+
         {/* Background ambient lighting */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative space-y-8">
           {/* Brand header */}
-          <div className="flex items-center gap-3">
-            <span className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center">
-              <EBLogo className="w-5 h-5 text-white" />
-            </span>
-            <div>
-              <span className="text-xs text-indigo-400 font-mono font-semibold tracking-wider block uppercase">Stage 3 Integration</span>
-              <h2 className="text-lg font-black tracking-tight text-white leading-none">betz app</h2>
+          <div className="flex items-center justify-between gap-2.5">
+            <div className="flex items-center gap-3">
+              <span className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center">
+                <EBLogo className="w-5 h-5 text-white" />
+              </span>
+              <div>
+                <span className="text-[10px] text-indigo-400 font-mono font-semibold tracking-wider block uppercase">Stage 3 Integration</span>
+                <h2 className="text-base font-black tracking-tight text-white leading-none">betz app</h2>
+              </div>
             </div>
+
+            {/* Video sound controller toggle button */}
+            <button
+              onClick={() => setVideoMuted(!videoMuted)}
+              className="p-1.5 px-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 flex items-center gap-1.5 transition-all cursor-pointer text-[9px] font-mono font-bold select-none shadow-md"
+              title={videoMuted ? "Unmute campaign music" : "Mute video audio"}
+            >
+              {videoMuted ? (
+                <>
+                  <VolumeX className="w-3 h-3 text-indigo-400 animate-pulse" />
+                  <span>UNMUTE AD</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3 h-3 text-emerald-400 animate-bounce" />
+                  <span className="text-emerald-400">SOUND ON</span>
+                </>
+              )}
+            </button>
           </div>
 
           <div className="space-y-4">
@@ -182,6 +217,42 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
               <div>
                 <h4 className="text-xs font-bold text-slate-200 font-sans">Autonomous Warning Alarms</h4>
                 <p className="text-[11px] text-slate-400">Receive persistent siren alarms 1 hour before stakes launch so you never fail.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Live App Advertisement Video Banner */}
+          <div id="app-promo-banner" className="bg-slate-950/40 border border-slate-800/60 rounded-2xl p-3.5 relative overflow-hidden shadow-inner">
+            <span className="absolute top-2 right-2 z-10 bg-indigo-600 text-white font-mono text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded-full uppercase">
+              Promo Video
+            </span>
+            <div className="flex gap-3.5 items-center">
+              {/* Vertical Video mockup frame */}
+              <div className="w-16 h-28 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800/80 flex-shrink-0 shadow-lg flex items-center justify-center">
+                <video 
+                  src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-80"
+                />
+                {/* Simulated vertical video overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+                <div className="absolute bottom-1.5 left-1 right-1 text-[7px] text-white font-black tracking-tighter leading-none text-center uppercase font-mono">
+                  DAY 10/31
+                </div>
+              </div>
+              <div className="space-y-1 flex-1 min-w-0">
+                <span className="text-[9px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">SHOWING UP DAILY</span>
+                <h4 className="text-xs font-black text-white truncate">BETZ Launch Ad</h4>
+                <p className="text-[10px] text-slate-400 leading-normal">
+                  Our battle ropes training campaign representing verified discipline.
+                </p>
+                <div className="pt-1 flex items-center gap-1.5 text-[9px] text-indigo-300 font-mono">
+                  <span className="bg-indigo-900/40 px-1 py-0.5 rounded border border-indigo-500/20">Staked: 500 XP</span>
+                  <span className="text-emerald-400 font-bold">Active</span>
+                </div>
               </div>
             </div>
           </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Database, RefreshCw, Trash2, Cpu, FileText, Check, AlertTriangle, 
-  Terminal, ShieldCheck, HelpCircle, Users, Layers, Star, Bell
+  Terminal, ShieldCheck, HelpCircle, Users, Layers, Star, Bell,
+  Volume2, VolumeX
 } from 'lucide-react';
 import { User, Challenge, UserChallenge, CheckIn, Verification, SystemLog } from '../types';
 
@@ -36,6 +37,7 @@ export default function SandboxCockpit({
   const [isSimulatingFail, setIsSimulatingFail] = useState(false);
   const [isSimulatingReminder, setIsSimulatingReminder] = useState(false);
   const [isSimulatingStart, setIsSimulatingStart] = useState(false);
+  const [videoMuted, setVideoMuted] = useState(true);
 
   const handleCronAdvance = async () => {
     setIsRunningCron(true);
@@ -124,83 +126,83 @@ export default function SandboxCockpit({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* Core Controls */}
-        <div className="md:col-span-8 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-4">
+        <div className="md:col-span-5 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1.5">
               <Cpu className="w-4 h-4" /> Server Controls
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
-              VITE_DEV_SERVER: ACTIVE
+            <span className="text-[9px] font-mono text-slate-500 bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded">
+              ONLINE
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={handleCronAdvance}
               disabled={isRunningCron}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1 border border-indigo-500/30 cursor-pointer"
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1 border border-indigo-500/30 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRunningCron ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${isRunningCron ? 'animate-spin' : ''}`} />
               Run Cron
             </button>
 
             <button
               onClick={onResetSandbox}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 border border-slate-700/60 cursor-pointer"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-xl text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 border border-slate-700/60 cursor-pointer"
             >
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <Database className="w-3 h-3 text-emerald-400" />
               Reset DB
             </button>
 
             <button
               onClick={handleSimulateReminder}
               disabled={isSimulatingReminder}
-              className="px-4 py-2 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/20 rounded-xl text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
               title="Simulate challenge checklist reminder warning"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSimulatingReminder ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${isSimulatingReminder ? 'animate-spin' : ''}`} />
               Sim Reminder
             </button>
 
             <button
               onClick={handleSimulateFail}
               disabled={isSimulatingFail}
-              className="px-4 py-2 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/20 rounded-xl text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
               title="Simulate challenge failure / missed check-in log"
             >
-              <AlertTriangle className={`w-3.5 h-3.5 ${isSimulatingFail ? 'animate-pulse' : ''}`} />
+              <AlertTriangle className={`w-3 h-3 ${isSimulatingFail ? 'animate-pulse' : ''}`} />
               Sim Failure
             </button>
 
             <button
               onClick={handleSimulateStart}
               disabled={isSimulatingStart}
-              className="col-span-2 px-4 py-2 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
+              className="col-span-2 px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-xl text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
               title="Simulate challenge starting in 1 hour alarm"
             >
-              <Bell className={`w-3.5 h-3.5 ${isSimulatingStart ? 'animate-bounce' : ''}`} />
-              Sim Start Alarm (starts in 1 hour)
+              <Bell className={`w-3 h-3 ${isSimulatingStart ? 'animate-bounce' : ''}`} />
+              Sim Start Alarm (1h reminder)
             </button>
           </div>
 
-          <div className="text-[10px] text-slate-400 font-mono flex items-start gap-1.5 leading-normal bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+          <div className="text-[9px] text-slate-400 font-mono flex items-start gap-1 leading-normal bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>
-              <strong>Alarms Ready:</strong> Trigger <strong>Sim Start Alarm</strong> to test warning 1 hour before start, <strong>Sim Reminder</strong> for checklist reminders, or <strong>Sim Failure</strong> to slash stakes!
+              <strong>Alarms:</strong> Run Sim Start Alarm, Sim Reminder, or Sim Failure to slash stakes!
             </span>
           </div>
         </div>
 
         {/* Quick Identity Switcher */}
-        <div className="md:col-span-4 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-3 flex flex-col justify-between">
+        <div className="md:col-span-3 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between">
           <div>
             <h4 className="text-xs font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1.5 mb-1">
               <Users className="w-4 h-4" /> Switch Operator
             </h4>
-            <p className="text-[9px] text-slate-500 font-mono leading-tight">Click to instantly log in as other team members for peer-voting tests:</p>
+            <p className="text-[8px] text-slate-500 font-mono leading-tight">Peer-voting switch:</p>
           </div>
 
-          <div className="space-y-1.5 my-2">
+          <div className="space-y-1 my-1.5">
             {[
               { name: 'yannick', role: 'Yannick S.' },
               { name: 'ryan', role: 'Ryan B.' },
@@ -211,17 +213,70 @@ export default function SandboxCockpit({
                 <button
                   key={user.name}
                   onClick={() => onUserSelected(user.name)}
-                  className={`w-full px-3 py-1.5 rounded-xl text-xs font-mono font-medium text-left flex justify-between items-center transition-all ${
+                  className={`w-full px-2.5 py-1 rounded-lg text-[10px] font-mono font-medium text-left flex justify-between items-center transition-all ${
                     isActive 
                       ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 font-bold' 
                       : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border border-transparent'
                   }`}
                 >
                   <span>@{user.name}</span>
-                  <span className="text-[9px] font-semibold opacity-70 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">{user.role}</span>
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Campaign Video Advertisement Section */}
+        <div className="md:col-span-4 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between relative overflow-hidden group shadow-inner">
+          <div className="flex justify-between items-center mb-1.5 z-10">
+            <h4 className="text-[10px] font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+              Live Launch Campaign
+            </h4>
+            <span className="text-[9px] bg-indigo-950 border border-indigo-500/20 text-indigo-300 font-mono font-black tracking-widest px-1.5 py-0.5 rounded-full uppercase">
+              Ad Promo
+            </span>
+          </div>
+
+          <div className="flex gap-2.5 items-center flex-1">
+            {/* Loop video container */}
+            <div className="w-12 h-20 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800/80 flex-shrink-0 shadow-md flex items-center justify-center">
+              <video 
+                id="sandbox-promo-video"
+                src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                autoPlay 
+                muted={videoMuted} 
+                loop 
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-85"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" />
+              
+              {/* Audio controller toggle badge overlay */}
+              <button
+                type="button"
+                onClick={() => setVideoMuted(!videoMuted)}
+                className="absolute bottom-1 right-1 p-1 bg-black/80 hover:bg-black text-white rounded-lg transition-all border border-slate-800/80 cursor-pointer"
+                title={videoMuted ? "Unmute campaign music" : "Mute audio"}
+              >
+                {videoMuted ? (
+                  <VolumeX className="w-2.5 h-2.5 text-slate-400" />
+                ) : (
+                  <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <span className="text-[8px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">DAY 10/31</span>
+              <h5 className="text-[10px] font-black text-white truncate uppercase">Battle Ropes Promo</h5>
+              <p className="text-[9px] text-slate-400 leading-tight">
+                Our active battle ropes training standard represents real staked discipline!
+              </p>
+              <div className="pt-1 flex items-center gap-1 text-[8px] font-mono text-indigo-300">
+                <span className="bg-indigo-900/30 px-1 py-0.5 rounded border border-indigo-500/10 font-bold text-emerald-400">XP Reward: 1,500</span>
+              </div>
+            </div>
           </div>
         </div>
 

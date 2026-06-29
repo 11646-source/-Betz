@@ -4,7 +4,7 @@ import {
   Sparkles, CheckCircle, Clock, Trophy, Award, LogIn, LogOut, 
   Check, X, ShieldCheck, PlusCircle, Activity, Calendar, UserPlus, 
   ChevronRight, Send, User, Target, Layers, Search,
-  Bell, AlertTriangle, Volume2, Info
+  Bell, AlertTriangle, Volume2, VolumeX, Info
 } from 'lucide-react';
 import EBLogo from './EBLogo';
 import { Challenge, CheckIn, Verification } from '../types';
@@ -13,6 +13,9 @@ import { Challenge, CheckIn, Verification } from '../types';
 const playAlarmSound = () => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
     const osc1 = audioCtx.createOscillator();
     const osc2 = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
@@ -26,7 +29,8 @@ const playAlarmSound = () => {
     osc1.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 0.5);
     osc2.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 0.5);
     
-    gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    // Increased gain to make it robustly audible
+    gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
     
     osc1.connect(gainNode);
@@ -45,6 +49,9 @@ const playAlarmSound = () => {
 const playReminderSound = () => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
     
@@ -52,7 +59,8 @@ const playReminderSound = () => {
     osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
     osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
     
-    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    // Increased gain for audibility
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
     
     osc.connect(gainNode);
@@ -68,31 +76,34 @@ const playReminderSound = () => {
 const playWarningSound = () => {
   try {
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
     const now = audioCtx.currentTime;
     
-    // First high beep
+    // First high beep - using triangle waves for richer harmonics and loudness
     const osc1 = audioCtx.createOscillator();
     const gain1 = audioCtx.createGain();
-    osc1.type = 'sine';
+    osc1.type = 'triangle';
     osc1.frequency.setValueAtTime(587.33, now); // D5
-    gain1.gain.setValueAtTime(0.06, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    gain1.gain.setValueAtTime(0.35, now); // Increased gain from 0.06 to 0.35
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
     osc1.connect(gain1);
     gain1.connect(audioCtx.destination);
     osc1.start(now);
-    osc1.stop(now + 0.15);
+    osc1.stop(now + 0.25);
     
     // Second higher beep (staggered slightly for dual tone/chime warning effect)
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(880.00, now + 0.12); // A5
-    gain2.gain.setValueAtTime(0.06, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(880.00, now + 0.15); // A5
+    gain2.gain.setValueAtTime(0.35, now + 0.15); // Increased gain from 0.06 to 0.35
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
     osc2.connect(gain2);
     gain2.connect(audioCtx.destination);
-    osc2.start(now + 0.12);
-    osc2.stop(now + 0.3);
+    osc2.start(now + 0.15);
+    osc2.stop(now + 0.45);
   } catch (err) {
     console.warn('Audio Context blocked or unsupported:', err);
   }
@@ -134,6 +145,7 @@ export default function PhoneEmulator({
 }: PhoneEmulatorProps) {
   // Mobile UI screens: 'FEED', 'DISCOVER', 'CREATE', 'LEADERBOARD', 'PROFILE', 'AUTH_LOGIN', 'AUTH_REGISTER'
   const [activeTab, setActiveTab] = useState<'FEED' | 'DISCOVER' | 'CREATE' | 'LEADERBOARD' | 'PROFILE'>('FEED');
+  const [feedVideoMuted, setFeedVideoMuted] = useState(true);
   
   // Alarms and Warning States
   const [showAlarmsDrawer, setShowAlarmsDrawer] = useState(false);
@@ -332,7 +344,10 @@ export default function PhoneEmulator({
       
       let toggle = false;
       const playTone = () => {
-        if (!audioCtx || audioCtx.state === 'suspended') return;
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
         const now = audioCtx.currentTime;
         
         // Setup two oscillators for a rich, dual-tone alarm ringtone
@@ -351,7 +366,7 @@ export default function PhoneEmulator({
         o2.frequency.setValueAtTime(freq * 1.5, now); // Perfect fifth harmony for depth
         
         g.gain.setValueAtTime(0.0, now);
-        g.gain.linearRampToValueAtTime(0.06, now + 0.05);
+        g.gain.linearRampToValueAtTime(0.32, now + 0.05); // Increased gain from 0.06 to 0.32 for clear audibility
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
         
         o1.connect(g);
@@ -804,6 +819,57 @@ export default function PhoneEmulator({
                     <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">{feed.length} checkins</span>
                   </div>
 
+                  {/* ACTIVE LIVE TRAINING ADVERT VIDEO HERO CARD */}
+                  <div className="bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden relative shadow-md group">
+                    <div className="relative h-48 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                      <video 
+                        id="feed-promo-video"
+                        src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                        autoPlay 
+                        muted={feedVideoMuted} 
+                        loop 
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover opacity-85 hover:opacity-100 transition-opacity duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
+                      
+                      {/* Interactive live indicator */}
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600/95 text-white font-mono text-[9px] font-black tracking-widest px-2.5 py-1 rounded-md uppercase select-none shadow-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        ACTIVE TARGET
+                      </div>
+
+                      {/* Sound Controller Button overlay on video */}
+                      <button
+                        type="button"
+                        onClick={() => setFeedVideoMuted(!feedVideoMuted)}
+                        className="absolute top-3 right-3 p-1.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1 shadow-lg cursor-pointer transition-all text-[8px] font-mono font-bold uppercase select-none z-10"
+                        title={feedVideoMuted ? "Unmute battle ropes training" : "Mute audio"}
+                      >
+                        {feedVideoMuted ? (
+                          <>
+                            <VolumeX className="w-2.5 h-2.5 text-indigo-400 animate-pulse" />
+                            <span>UNMUTE</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-bounce" />
+                            <span className="text-emerald-400">SOUND ON</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Video Title Overlays */}
+                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-left">
+                        <span className="text-[9px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">SHOWING UP DAILY</span>
+                        <h4 className="text-sm font-black text-white uppercase leading-none mt-0.5">BETZ Launch Ad: Battle Ropes</h4>
+                        <p className="text-[10px] text-slate-300 leading-tight mt-1">
+                          Our crossfit ropes campaign representing verified daily discipline.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {feed.length === 0 ? (
                     <div className="text-center py-12 bg-[#1E293B]/40 rounded-2xl border border-dashed border-slate-800">
                       <p className="text-xs text-slate-500 font-mono">No checkpoint proofs logged on chain yet.</p>
@@ -829,15 +895,26 @@ export default function PhoneEmulator({
                             </span>
                           </div>
 
-                          {/* Image proof if exists */}
+                          {/* Image or Video proof if exists */}
                           {post.imageUrl && (
                             <div className="w-full h-36 relative bg-slate-950">
-                              <img 
-                                src={post.imageUrl} 
-                                alt="Checkpoint proof" 
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
+                              {post.imageUrl.toLowerCase().endsWith('.mp4') || post.imageUrl.toLowerCase().includes('video') ? (
+                                <video 
+                                  src={post.imageUrl} 
+                                  autoPlay 
+                                  muted 
+                                  loop 
+                                  playsInline
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <img 
+                                  src={post.imageUrl} 
+                                  alt="Checkpoint proof" 
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
                               
                               {/* Status badge */}
                               <div className="absolute top-2.5 right-2.5">
@@ -1453,11 +1530,23 @@ export default function PhoneEmulator({
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Custom Image Proof URL (Optional)</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Custom Image or Video Proof URL (Optional)</label>
+                  <button 
+                    type="button"
+                    onClick={() => setCheckinForm({
+                      text_proof: "Completed Day 10/31 showing up daily standard ropes training. Absolutely crushed it!",
+                      imageUrl: "https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                    })}
+                    className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold underline font-mono cursor-pointer"
+                  >
+                    Prefill Battle Ropes Video Ad
+                  </button>
+                </div>
                 <input 
                   type="url"
                   className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
-                  placeholder="Leave blank for random category placeholder"
+                  placeholder="Paste an image or vertical MP4 video URL"
                   value={checkinForm.imageUrl}
                   onChange={e => setCheckinForm({...checkinForm, imageUrl: e.target.value})}
                 />

@@ -238,6 +238,34 @@ async function startServer() {
 
   // --- API ROUTES ---
 
+  // Temporary endpoint to locate uploaded files recursively
+  app.get("/api/dev/files", (req, res) => {
+    function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
+      try {
+        const files = fs.readdirSync(dirPath);
+        files.forEach((file) => {
+          const fullPath = path.join(dirPath, file);
+          if (fs.statSync(fullPath).isDirectory()) {
+            if (file !== "node_modules" && file !== ".git" && file !== "dist") {
+              getAllFiles(fullPath, arrayOfFiles);
+            }
+          } else {
+            arrayOfFiles.push(path.relative(process.cwd(), fullPath));
+          }
+        });
+      } catch (e) {
+        // ignore errors
+      }
+      return arrayOfFiles;
+    }
+    try {
+      const files = getAllFiles(process.cwd());
+      res.json({ files });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Auth: Register
   app.post("/api/auth/register", (req, res) => {
     const { username, email, password } = req.body;
