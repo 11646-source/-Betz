@@ -636,13 +636,13 @@ export default function PhoneEmulator({
         
         {/* If user is not authenticated, show Auth Screens */}
         {!currentUser ? (
-          <div className="py-6 flex flex-col justify-center min-h-[500px]">
-            <div className="text-center mb-6">
-              <div className="inline-flex p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20 mb-3">
-                <BetzLogo className="w-8 h-8 text-white" />
+          <div className="py-12 flex flex-col justify-center min-h-[600px] max-w-md mx-auto">
+            <div className="text-center mb-10">
+              <div className="inline-flex p-4.5 bg-indigo-600 rounded-2xl shadow-xl shadow-indigo-500/20 mb-4 animate-pulse">
+                <BetzLogo className="w-12 h-12 text-white" />
               </div>
-              <h2 className="text-xl font-bold tracking-tight">Access betz app</h2>
-              <p className="text-xs text-slate-400 mt-1">Social habits staking & verification engine</p>
+              <h2 className="text-3xl font-black tracking-tight text-white uppercase font-mono">Access betz app</h2>
+              <p className="text-sm text-slate-400 mt-2 font-medium">Social habits staking & verification engine</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -653,13 +653,13 @@ export default function PhoneEmulator({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   onSubmit={handleLoginSubmit} 
-                  className="space-y-4"
+                  className="space-y-6"
                 >
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Username or Email</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-widest font-bold text-slate-400">Username or Email</label>
                     <input 
                       type="text"
-                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-3.5 text-base text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-medium shadow-sm"
                       placeholder="e.g. yannick"
                       value={loginForm.usernameOrEmail}
                       onChange={e => setLoginForm({...loginForm, usernameOrEmail: e.target.value})}
@@ -667,37 +667,37 @@ export default function PhoneEmulator({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Password</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-widest font-bold text-slate-400">Password</label>
                     <input 
                       type="password"
-                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-3.5 text-base text-white focus:outline-none focus:border-indigo-500 shadow-sm"
                       value={loginForm.password}
                       onChange={e => setLoginForm({...loginForm, password: e.target.value})}
                       required
                     />
-                    <span className="text-[10px] text-slate-500 mt-1 block">Default sandbox key: 123456</span>
+                    <span className="text-xs text-slate-500 mt-2 block font-mono">Default sandbox key: <strong className="text-amber-400">123456</strong></span>
                   </div>
 
                   {authError && (
-                    <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs">
+                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-mono">
                       {authError}
                     </div>
                   )}
 
                   <button 
                     type="submit" 
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-4 text-sm font-bold uppercase tracking-wider shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className="w-5 h-5" />
                     Enter Protocol
                   </button>
 
-                  <div className="text-center pt-4 border-t border-slate-800/60">
+                  <div className="text-center pt-6 border-t border-slate-800/60">
                     <button 
                       type="button" 
                       onClick={() => { setIsRegistering(true); setAuthError(''); }}
-                      className="text-indigo-400 hover:text-indigo-300 text-xs font-medium"
+                      className="text-indigo-400 hover:text-indigo-300 text-sm font-bold tracking-wide transition-colors"
                     >
                       Create new researcher ledger
                     </button>
@@ -710,13 +710,13 @@ export default function PhoneEmulator({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   onSubmit={handleRegisterSubmit} 
-                  className="space-y-4"
+                  className="space-y-6"
                 >
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Select Username</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-widest font-bold text-slate-400">Select Username</label>
                     <input 
                       type="text"
-                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-3.5 text-base text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-medium shadow-sm"
                       placeholder="e.g. nathanael"
                       value={registerForm.username}
                       onChange={e => setRegisterForm({...registerForm, username: e.target.value})}
@@ -724,11 +724,11 @@ export default function PhoneEmulator({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Email Address</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-widest font-bold text-slate-400">Email Address</label>
                     <input 
                       type="email"
-                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-3.5 text-base text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-medium shadow-sm"
                       placeholder="nath@gmail.com"
                       value={registerForm.email}
                       onChange={e => setRegisterForm({...registerForm, email: e.target.value})}
@@ -736,11 +736,11 @@ export default function PhoneEmulator({
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Password</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs uppercase tracking-widest font-bold text-slate-400">Password</label>
                     <input 
                       type="password"
-                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-[#1E293B] border border-slate-700 rounded-xl px-4 py-3.5 text-base text-white focus:outline-none focus:border-indigo-500 shadow-sm"
                       value={registerForm.password}
                       onChange={e => setRegisterForm({...registerForm, password: e.target.value})}
                       required
@@ -748,24 +748,24 @@ export default function PhoneEmulator({
                   </div>
 
                   {authError && (
-                    <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs">
+                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-mono">
                       {authError}
                     </div>
                   )}
 
                   <button 
                     type="submit" 
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2.5 text-xs font-semibold shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-4 text-sm font-bold uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <UserPlus className="w-4 h-4" />
+                    <UserPlus className="w-5 h-5" />
                     Register Credentials
                   </button>
 
-                  <div className="text-center pt-4 border-t border-slate-800/60">
+                  <div className="text-center pt-6 border-t border-slate-800/60">
                     <button 
                       type="button" 
                       onClick={() => { setIsRegistering(false); setAuthError(''); }}
-                      className="text-indigo-400 hover:text-indigo-300 text-xs font-medium"
+                      className="text-indigo-400 hover:text-indigo-300 text-sm font-bold tracking-wide transition-colors"
                     >
                       Login with existing profile
                     </button>
