@@ -354,10 +354,15 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#EEEEEE] text-slate-800 min-h-screen font-sans antialiased flex flex-col justify-between">
+    <div 
+      className="text-slate-100 min-h-screen font-sans antialiased flex flex-col justify-between relative bg-slate-950 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: 'url("/wallpaper.jpg")' }}
+    >
+      {/* Semi-transparent dark overlay for elegant contrast and glassmorphism support */}
+      <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-xs pointer-events-none z-0" />
       
       {/* Sandbox Top Branded Masthead */}
-      <header className="px-6 py-4 bg-[#EEEEEE] border-b border-indigo-200 shadow-sm z-10">
+      <header className="px-6 py-4 bg-slate-900/80 backdrop-blur-md border-b border-indigo-500/20 shadow-lg z-10 text-white relative">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -366,32 +371,32 @@ export default function App() {
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-slate-900 leading-none">BETZ</h1>
-                  <span className="text-[11px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2.5 py-0.5 rounded font-mono font-medium">
+                  <h1 className="text-lg font-bold text-white leading-none">BETZ</h1>
+                  <span className="text-[11px] bg-indigo-950/60 border border-indigo-500/30 text-indigo-300 px-2.5 py-0.5 rounded font-mono font-medium">
                     Gamified Social Challenge App
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Team: Yannick Sookree • Ryan Adams Bundhoo • Nathanaël Perraud • Alexandre Francois</p>
+                <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Team: Yannick Sookree • Ryan Adams Bundhoo • Nathanaël Perraud • Alexandre Francois</p>
               </div>
             </div>
           </div>
 
           {/* Academic and project details */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-2 bg-[#EEEEEE] rounded-xl border border-indigo-200 text-right md:-mr-2 font-mono text-[11px] text-slate-600">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-2 bg-slate-900/60 backdrop-blur-sm rounded-xl border border-indigo-500/20 text-right md:-mr-2 font-mono text-[11px] text-slate-300">
             {currentUser && (
-              <div className="flex items-center gap-2 bg-white border border-indigo-300 shadow-sm px-3 py-1 rounded-xl text-left">
+              <div className="flex items-center gap-2 bg-slate-800 border border-indigo-500/30 shadow-md px-3 py-1 rounded-xl text-left">
                 <div className="h-6 w-6 bg-indigo-600 rounded-full text-white font-bold flex items-center justify-center text-[10px] uppercase font-sans shrink-0 ring-2 ring-indigo-100">
                   {currentUser.username[0].toUpperCase()}
                 </div>
                 <div className="leading-none shrink-0">
                   <span className="text-slate-400 block text-[7px] uppercase tracking-wider font-extrabold">Active</span>
-                  <span className="text-indigo-600 font-bold font-sans text-[11px]">@{currentUser.username}</span>
+                  <span className="text-indigo-400 font-bold font-sans text-[11px]">@{currentUser.username}</span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-2 px-2 py-1 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 hover:text-indigo-900 text-[10px] font-sans font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm"
+                  className="ml-2 px-2 py-1 bg-slate-900 hover:bg-slate-800 border border-indigo-500/30 rounded-lg text-indigo-300 hover:text-indigo-200 text-[10px] font-sans font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm"
                 >
-                  <LogOut className="w-3 h-3 text-indigo-700" />
+                  <LogOut className="w-3 h-3 text-indigo-400" />
                   Sign Out
                 </button>
               </div>
@@ -401,7 +406,7 @@ export default function App() {
       </header>
 
       {/* Main landing page with Phone simulator and Sandbox cockpit side-by-side */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start justify-center">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start justify-center relative z-10">
         {/* Left hand side: Phone Emulator */}
         <div className="flex-shrink-0 mx-auto lg:sticky lg:top-4">
           <PhoneEmulator
@@ -435,7 +440,7 @@ export default function App() {
       </main>
 
       {/* Footer Bar */}
-      <footer className="h-10 bg-slate-900 text-slate-400 text-[10px] flex items-center px-8 justify-between mt-auto">
+      <footer className="h-10 bg-slate-950/90 text-slate-400 text-[10px] flex items-center px-8 justify-between mt-auto relative z-10 border-t border-slate-900">
         <div className="flex gap-4">
           <span>© 2026 BETZ</span>
           <span className="opacity-50 font-mono">v2.4.0-stable</span>

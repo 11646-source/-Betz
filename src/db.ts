@@ -71,6 +71,32 @@ class MockDatabaseEngine {
       duration_days: 5,
       created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
       start_time: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'chal-3',
+      title: 'Morning Fog 5K Run',
+      description: 'Complete a structured 5K outdoor run at dawn and share pacing telemetry screenshot proof.',
+      category: 'Cardio',
+      creator_id: tertiaryUser.id,
+      creator_username: tertiaryUser.username,
+      reward_xp: 180,
+      participants_count: 3,
+      duration_days: 10,
+      created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+      start_time: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'chal-4',
+      title: 'Pure Hydration & Nutrition',
+      description: 'Drink at least 3.5 Liters of water and log a balanced organic green meal daily.',
+      category: 'Nutrition',
+      creator_id: defaultUser.id,
+      creator_username: defaultUser.username,
+      reward_xp: 120,
+      participants_count: 3,
+      duration_days: 14,
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      start_time: new Date(Date.now() - 3600000).toISOString()
     }];
 
     this.userChallenges = [{
@@ -89,9 +115,69 @@ class MockDatabaseEngine {
       status: 'ACTIVE',
       progress: 1,
       challenge: this.challenges[0]
+    }, {
+      id: 'uc-4',
+      user_id: secondaryUser.id,
+      challenge_id: 'chal-2',
+      enrolled_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 1,
+      challenge: this.challenges[1]
+    }, {
+      id: 'uc-5',
+      user_id: tertiaryUser.id,
+      challenge_id: 'chal-3',
+      enrolled_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 3,
+      challenge: this.challenges[2]
+    }, {
+      id: 'uc-6',
+      user_id: defaultUser.id,
+      challenge_id: 'chal-4',
+      enrolled_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 1,
+      challenge: this.challenges[3]
     }];
 
     this.checkIns = [
+      {
+        id: 'ci-4',
+        user_challenge_id: 'uc-6',
+        challenge_id: 'chal-4',
+        challenge_title: 'Pure Hydration & Nutrition',
+        user_id: defaultUser.id,
+        username: defaultUser.username,
+        text_proof: 'Logged balanced meal. Avocado bowl with dark leafy greens and exact 3.8L hydration target achieved for today.',
+        imageUrl: '/hydration_proof.jpg',
+        created_at: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
+        status: 'PENDING'
+      },
+      {
+        id: 'ci-3',
+        user_challenge_id: 'uc-5',
+        challenge_id: 'chal-3',
+        challenge_title: 'Morning Fog 5K Run',
+        user_id: tertiaryUser.id,
+        username: tertiaryUser.username,
+        text_proof: 'Woke up to foggy streets but crushed the 5K pacing run! Dynamic stride and full endurance locked in.',
+        imageUrl: '/running_proof.jpg',
+        created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+        status: 'PENDING'
+      },
+      {
+        id: 'ci-2',
+        user_challenge_id: 'uc-4',
+        challenge_id: 'chal-2',
+        challenge_title: 'Clean Code: Express APIs',
+        user_id: secondaryUser.id,
+        username: secondaryUser.username,
+        text_proof: 'All old endpoints refactored to follow strict type safety and REST standard constraints.',
+        imageUrl: '/coding_proof.jpg',
+        created_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+        status: 'APPROVED'
+      },
       {
         id: 'ci-1',
         user_challenge_id: 'uc-1',
@@ -99,8 +185,8 @@ class MockDatabaseEngine {
         challenge_title: 'Daily 5AM Workout',
         user_id: defaultUser.id,
         username: defaultUser.username,
-        text_proof: 'Leg day completed. Felt great. Woke up at 4:55 AM.',
-        imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60',
+        text_proof: 'Leg day completed. Felt great. Heavy deadlifts with loaded barbell verified.',
+        imageUrl: '/workout_proof.jpg',
         created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
         status: 'APPROVED'
       }
@@ -388,6 +474,45 @@ class MockDatabaseEngine {
       duration_days: 7,
       created_at: new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString(),
       start_time: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'chal-2',
+      title: 'Clean Code: Express APIs',
+      description: 'Refactor old endpoints to follow strict type safety and REST standard constraints.',
+      category: 'Coding',
+      creator_id: 'ry845fbf-4076-4767-8919-48227e7ca4b2',
+      creator_username: 'ryan',
+      reward_xp: 200,
+      participants_count: 2,
+      duration_days: 5,
+      created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+      start_time: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'chal-3',
+      title: 'Morning Fog 5K Run',
+      description: 'Complete a structured 5K outdoor run at dawn and share pacing telemetry screenshot proof.',
+      category: 'Cardio',
+      creator_id: 'na945fbf-4076-4767-8919-48227e7ca4b3',
+      creator_username: 'nathanael',
+      reward_xp: 180,
+      participants_count: 3,
+      duration_days: 10,
+      created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+      start_time: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'chal-4',
+      title: 'Pure Hydration & Nutrition',
+      description: 'Drink at least 3.5 Liters of water and log a balanced organic green meal daily.',
+      category: 'Nutrition',
+      creator_id: 'yc745fbf-4076-4767-8919-48227e7ca4b1',
+      creator_username: 'yannick',
+      reward_xp: 120,
+      participants_count: 3,
+      duration_days: 14,
+      created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      start_time: new Date(Date.now() - 3600000).toISOString()
     }];
 
     this.userChallenges = [{
@@ -406,9 +531,69 @@ class MockDatabaseEngine {
       status: 'ACTIVE',
       progress: 1,
       challenge: this.challenges[0]
+    }, {
+      id: 'uc-4',
+      user_id: 'ry845fbf-4076-4767-8919-48227e7ca4b2',
+      challenge_id: 'chal-2',
+      enrolled_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 1,
+      challenge: this.challenges[1]
+    }, {
+      id: 'uc-5',
+      user_id: 'na945fbf-4076-4767-8919-48227e7ca4b3',
+      challenge_id: 'chal-3',
+      enrolled_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 3,
+      challenge: this.challenges[2]
+    }, {
+      id: 'uc-6',
+      user_id: 'yc745fbf-4076-4767-8919-48227e7ca4b1',
+      challenge_id: 'chal-4',
+      enrolled_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
+      status: 'ACTIVE',
+      progress: 1,
+      challenge: this.challenges[3]
     }];
 
     this.checkIns = [
+      {
+        id: 'ci-4',
+        user_challenge_id: 'uc-6',
+        challenge_id: 'chal-4',
+        challenge_title: 'Pure Hydration & Nutrition',
+        user_id: 'yc745fbf-4076-4767-8919-48227e7ca4b1',
+        username: 'yannick',
+        text_proof: 'Logged balanced meal. Avocado bowl with dark leafy greens and exact 3.8L hydration target achieved for today.',
+        imageUrl: '/hydration_proof.jpg',
+        created_at: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
+        status: 'PENDING'
+      },
+      {
+        id: 'ci-3',
+        user_challenge_id: 'uc-5',
+        challenge_id: 'chal-3',
+        challenge_title: 'Morning Fog 5K Run',
+        user_id: 'na945fbf-4076-4767-8919-48227e7ca4b3',
+        username: 'nathanael',
+        text_proof: 'Woke up to foggy streets but crushed the 5K pacing run! Dynamic stride and full endurance locked in.',
+        imageUrl: '/running_proof.jpg',
+        created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+        status: 'PENDING'
+      },
+      {
+        id: 'ci-2',
+        user_challenge_id: 'uc-4',
+        challenge_id: 'chal-2',
+        challenge_title: 'Clean Code: Express APIs',
+        user_id: 'ry845fbf-4076-4767-8919-48227e7ca4b2',
+        username: 'ryan',
+        text_proof: 'All old endpoints refactored to follow strict type safety and REST standard constraints.',
+        imageUrl: '/coding_proof.jpg',
+        created_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+        status: 'APPROVED'
+      },
       {
         id: 'ci-1',
         user_challenge_id: 'uc-1',
@@ -416,8 +601,8 @@ class MockDatabaseEngine {
         challenge_title: 'Daily 5AM Workout',
         user_id: 'yc745fbf-4076-4767-8919-48227e7ca4b1',
         username: 'yannick',
-        text_proof: 'Leg day completed. Felt great. Woke up at 4:55 AM.',
-        imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60',
+        text_proof: 'Leg day completed. Felt great. Heavy deadlifts with loaded barbell verified.',
+        imageUrl: '/workout_proof.jpg',
         created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
         status: 'APPROVED'
       }

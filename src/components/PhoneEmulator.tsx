@@ -819,7 +819,7 @@ export default function PhoneEmulator({
                     <div className="relative h-72 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
                       <video 
                         id="feed-promo-video"
-                        src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                        src="https://assets.mixkit.co/videos/preview/mixkit-developer-working-on-code-on-a-computer-screen-40484-large.mp4"
                         autoPlay 
                         muted={feedVideoMuted} 
                         loop 
@@ -830,8 +830,8 @@ export default function PhoneEmulator({
                       
                       {/* Interactive live indicator */}
                       <div className="absolute top-4 left-4 flex items-center gap-2 bg-indigo-600/95 text-white font-mono text-[10px] font-black tracking-widest px-3 py-1.5 rounded-lg uppercase select-none shadow-md">
-                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                        ACTIVE TARGET
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                        FEATURED CAMPAIGN
                       </div>
 
                       {/* Sound Controller Button overlay on video */}
@@ -839,7 +839,7 @@ export default function PhoneEmulator({
                         type="button"
                         onClick={() => setFeedVideoMuted(!feedVideoMuted)}
                         className="absolute top-4 right-4 p-2.5 rounded-xl bg-slate-950/95 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1.5 shadow-lg cursor-pointer transition-all text-[10px] font-mono font-bold uppercase select-none z-10"
-                        title={feedVideoMuted ? "Unmute battle ropes training" : "Mute audio"}
+                        title={feedVideoMuted ? "Unmute coding ambient sound" : "Mute audio"}
                       >
                         {feedVideoMuted ? (
                           <>
@@ -856,10 +856,10 @@ export default function PhoneEmulator({
 
                       {/* Video Title Overlays */}
                       <div className="absolute bottom-5 left-5 right-5 text-left">
-                        <span className="text-xs text-indigo-400 font-mono font-extrabold uppercase tracking-widest block">SHOWING UP DAILY</span>
-                        <h4 className="text-lg font-black text-white uppercase leading-tight mt-1">BETZ Launch Ad: Battle Ropes</h4>
+                        <span className="text-xs text-amber-400 font-mono font-extrabold uppercase tracking-widest block">DEVELOPER STAKING</span>
+                        <h4 className="text-lg font-black text-white uppercase leading-tight mt-1">100 Days of Code Challenge</h4>
                         <p className="text-sm text-slate-300 leading-relaxed mt-1.5">
-                          Our crossfit ropes campaign representing verified daily discipline.
+                          Commit your daily GitHub hashes. Log clean code screenshot proof to satisfy our AI peer-review consensus ledger!
                         </p>
                       </div>
                     </div>
