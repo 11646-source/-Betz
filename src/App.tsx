@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { User, Challenge, CheckIn, Verification, SystemLog } from './types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { User, Challenge, CheckIn, Verification, SystemLog, UserChallenge } from './types';
+
+export interface LeaderboardEntry {
+  id: string;
+  username: string;
+  total_xp: number;
+}
+import { Cpu, LogOut } from 'lucide-react';
+import EBLogo from './components/BetzLogo';
 import PhoneEmulator from './components/PhoneEmulator';
 import SandboxCockpit from './components/SandboxCockpit';
-import { Cpu, LogOut } from 'lucide-react';
-import EBLogo from './components/EBLogo';
-import AuthPage from './components/AuthPage';
 
 export default function App() {
   // Global React States
@@ -18,14 +23,14 @@ export default function App() {
 
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [feed, setFeed] = useState<(CheckIn & { votes: Verification[] })[]>([]);
-  const [userChallenges, setUserChallenges] = useState<any[]>([]);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [userChallenges, setUserChallenges] = useState<UserChallenge[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [dbState, setDbState] = useState<{
     users: User[];
     challenges: Challenge[];
-    user_challenges: any[];
+    user_challenges: UserChallenge[];
     check_ins: CheckIn[];
     verifications: Verification[];
   }>({
@@ -35,6 +40,12 @@ export default function App() {
     check_ins: [],
     verifications: []
   });
+
+  const currentUserIdRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    currentUserIdRef.current = currentUser?.id || null;
+  }, [currentUser?.id]);
 
   // Local storage initialization
   useEffect(() => {
@@ -60,8 +71,26 @@ export default function App() {
     }
   }, []);
 
+  // Fetch active user's specialized enrollments
+  const fetchUserEnrollments = useCallback(async () => {
+    const userId = currentUserIdRef.current;
+    if (!userId) {
+      setUserChallenges([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/users/${userId}/challenges`);
+      if (res.ok) {
+        const data = await res.json();
+        setUserChallenges(data);
+      }
+    } catch (e) {
+      console.error('Error fetching user challenges', e);
+    }
+  }, []);
+
   // Fetch functions
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // 1. Fetch generic feed
       const feedRes = await fetch('/api/feed');
@@ -98,8 +127,9 @@ export default function App() {
         setDbState(stateData);
 
         // Update active logged in user's state from fresh database values
-        if (currentUser) {
-          const freshUser = stateData.users.find((u: User) => u.id === currentUser.id);
+        setCurrentUser(prevUser => {
+          if (!prevUser) return null;
+          const freshUser = stateData.users.find((u: User) => u.id === prevUser.id);
           if (freshUser) {
             const updated = {
               id: freshUser.id,
@@ -109,48 +139,33 @@ export default function App() {
             };
             // Safely guard against stale async closures after logout
             if (localStorage.getItem('betz_user')) {
-              setCurrentUser(updated);
               localStorage.setItem('betz_user', JSON.stringify(updated));
             }
+            return updated;
           }
-        }
+          return prevUser;
+        });
+      }
+      
+      // Update enrollments concurrently if logged in
+      if (currentUserIdRef.current) {
+        await fetchUserEnrollments();
       }
     } catch (e) {
       console.error('Error polling background systems', e);
     }
-  };
-
-  // Fetch active user's specialized enrollments
-  const fetchUserEnrollments = async () => {
-    if (!currentUser) return;
-    try {
-      const res = await fetch(`/api/users/${currentUser.id}/challenges`);
-      if (res.ok) {
-        const data = await res.json();
-        setUserChallenges(data);
-      }
-    } catch (e) {
-      console.error('Error fetching user challenges', e);
-    }
-  };
+  }, [fetchUserEnrollments]);
 
   // Pull triggers periodically
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 1500);
+    // Using a more reasonable polling interval (3 seconds) to reduce backend pressure
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
-  }, [currentUser?.id]);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchUserEnrollments();
-    } else {
-      setUserChallenges([]);
-    }
-  }, [currentUser?.id, feed]);
+  }, [fetchData]);
 
   // Auth Handlers
-  const handleRegister = async (form: any) => {
+  const handleRegister = async (form: Record<string, any>) => {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -168,7 +183,7 @@ export default function App() {
     fetchData();
   };
 
-  const handleLogin = async (form: any) => {
+  const handleLogin = async (form: Record<string, any>) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -197,6 +212,7 @@ export default function App() {
   // Sandbox Switch Client identity
   const handleQuickSwitchUser = async (username: string) => {
     try {
+      // TODO: DEV ONLY - Remove hardcoded impersonation password in production
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,7 +256,7 @@ export default function App() {
   };
 
   // Challenge creations
-  const handleCreateChallenge = async (form: any) => {
+  const handleCreateChallenge = async (form: Record<string, any>) => {
     if (!token) return;
     const res = await fetch('/api/challenges', {
       method: 'POST',
@@ -259,7 +275,7 @@ export default function App() {
   };
 
   // Checkin creations
-  const handleSubmitCheckin = async (challengeId: string, form: any) => {
+  const handleSubmitCheckin = async (challengeId: string, form: Record<string, any>) => {
     if (!token) return;
     const res = await fetch(`/api/challenges/${challengeId}/checkin`, {
       method: 'POST',
@@ -338,10 +354,10 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#F8FAFC] text-slate-800 min-h-screen font-sans antialiased flex flex-col justify-between">
+    <div className="bg-[#EEEEEE] text-slate-800 min-h-screen font-sans antialiased flex flex-col justify-between">
       
       {/* Sandbox Top Branded Masthead */}
-      <header className="px-6 py-4 bg-white border-b border-slate-200 shadow-sm z-10">
+      <header className="px-6 py-4 bg-[#EEEEEE] border-b border-indigo-200 shadow-sm z-10">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -352,20 +368,20 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-bold text-slate-900 leading-none">BETZ</h1>
                   <span className="text-[11px] bg-indigo-50 border border-indigo-100 text-indigo-600 px-2.5 py-0.5 rounded font-mono font-medium">
-                    Stage 3: Project Charter
+                    Gamified Social Challenge App
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Team: Yannick Sookree • Ryan Adams Bundhoo • Nathanaël Perraud</p>
+                <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">Team: Yannick Sookree • Ryan Adams Bundhoo • Nathanaël Perraud • Alexandre Francois</p>
               </div>
             </div>
           </div>
 
           {/* Academic and project details */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-2 bg-slate-50 rounded-xl border border-slate-200 text-right md:-mr-2 font-mono text-[11px] text-slate-600">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 p-2 bg-[#EEEEEE] rounded-xl border border-indigo-200 text-right md:-mr-2 font-mono text-[11px] text-slate-600">
             {currentUser && (
-              <div className="flex items-center gap-2 bg-indigo-50/80 border border-indigo-100 px-3 py-1 rounded-xl text-left">
-                <div className="h-5 w-5 bg-indigo-600 rounded-full text-white font-bold flex items-center justify-center text-[9px] uppercase font-sans shrink-0">
-                  {currentUser.username[0]}
+              <div className="flex items-center gap-2 bg-white border border-indigo-300 shadow-sm px-3 py-1 rounded-xl text-left">
+                <div className="h-6 w-6 bg-indigo-600 rounded-full text-white font-bold flex items-center justify-center text-[10px] uppercase font-sans shrink-0 ring-2 ring-indigo-100">
+                  {currentUser.username[0].toUpperCase()}
                 </div>
                 <div className="leading-none shrink-0">
                   <span className="text-slate-400 block text-[7px] uppercase tracking-wider font-extrabold">Active</span>
@@ -373,81 +389,49 @@ export default function App() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-2 px-2 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 text-[10px] font-sans font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm"
+                  className="ml-2 px-2 py-1 bg-white hover:bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-700 hover:text-indigo-900 text-[10px] font-sans font-bold cursor-pointer transition-all flex items-center gap-1 shadow-sm"
                 >
-                  <LogOut className="w-3 h-3 text-slate-400" />
+                  <LogOut className="w-3 h-3 text-indigo-700" />
                   Sign Out
                 </button>
               </div>
             )}
-            <div>
-              <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-bold">Environment Target</span>
-              <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px]">PROD_VER_2026.1</span>
-            </div>
-            <div className="h-6 w-px bg-slate-200" />
-            <div>
-              <span className="text-slate-400 block text-[9px] uppercase tracking-wider font-bold">PORT INTEGRATION</span>
-              <span className="text-indigo-600 font-semibold text-[10px]">C27/28 (ACTIVE)</span>
-            </div>
           </div>
         </div>
       </header>
 
-      {/* Main double column cockpit area or Login/Register Page */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-8 flex flex-col justify-center items-center">
-        {!currentUser ? (
-          <div className="w-full py-4 animate-fade-in">
-            <AuthPage onLogin={handleLogin} onRegister={handleRegister} />
-          </div>
-        ) : (
-          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* Left Side: Physical Phone Simulator Frame (Light Polish accent) */}
-            <section className="lg:col-span-5 flex flex-col items-center justify-center">
-              <div className="text-center mb-4 block lg:hidden">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest font-mono">Interactive Client Emulator</span>
-              </div>
-              <PhoneEmulator
-                currentUser={currentUser}
-                challenges={challenges}
-                feed={feed}
-                userChallenges={userChallenges}
-                leaderboard={leaderboard}
-                onRegister={handleRegister}
-                onLogin={handleLogin}
-                onJoinChallenge={handleJoinChallenge}
-                onCreateChallenge={handleCreateChallenge}
-                onSubmitCheckin={handleSubmitCheckin}
-                onCastVote={handleCastVote}
-                onLogout={handleLogout}
-              />
-            </section>
+      {/* Main landing page with Phone simulator and Sandbox cockpit side-by-side */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start justify-center">
+        {/* Left hand side: Phone Emulator */}
+        <div className="flex-shrink-0 mx-auto lg:sticky lg:top-4">
+          <PhoneEmulator
+            currentUser={currentUser}
+            challenges={challenges}
+            feed={feed}
+            userChallenges={userChallenges}
+            leaderboard={leaderboard}
+            onRegister={handleRegister}
+            onLogin={handleLogin}
+            onJoinChallenge={handleJoinChallenge}
+            onCreateChallenge={handleCreateChallenge}
+            onSubmitCheckin={handleSubmitCheckin}
+            onCastVote={handleCastVote}
+            onLogout={handleLogout}
+          />
+        </div>
 
-            {/* Right Side: PostgreSQL Explorer & Server Operations Terminal */}
-            <section className="lg:col-span-7 flex flex-col">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
-                  <Cpu className="w-4 h-4 text-indigo-500 animate-spin" />
-                  Relational Transaction Engine
-                </span>
-                <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                  <span>Engine Status: ONLINE</span>
-                </div>
-              </div>
-              <div className="flex-1 min-h-[560px]">
-                <SandboxCockpit
-                  logs={logs}
-                  dbState={dbState}
-                  onTriggerClockReset={handleTriggerClockReset}
-                  onResetSandbox={handleResetSandbox}
-                  onClearLogs={handleClearLogs}
-                  onUserSelected={handleQuickSwitchUser}
-                  activeUsername={currentUser?.username || ''}
-                />
-              </div>
-            </section>
-          </div>
-        )}
+        {/* Right hand side: Developer Sandbox Dashboard */}
+        <div className="flex-1 w-full min-w-0">
+          <SandboxCockpit
+            logs={logs}
+            dbState={dbState}
+            onTriggerClockReset={handleTriggerClockReset}
+            onResetSandbox={handleResetSandbox}
+            onClearLogs={handleClearLogs}
+            onUserSelected={handleQuickSwitchUser}
+            activeUsername={currentUser?.username || ''}
+          />
+        </div>
       </main>
 
       {/* Footer Bar */}

@@ -16,7 +16,7 @@ import {
   Volume2,
   VolumeX
 } from 'lucide-react';
-import EBLogo from './EBLogo';
+import BetzLogo from './BetzLogo';
 
 interface AuthPageProps {
   onLogin: (form: any) => Promise<void>;
@@ -152,11 +152,11 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
           <div className="flex items-center justify-between gap-2.5">
             <div className="flex items-center gap-3">
               <span className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/30 flex items-center justify-center">
-                <EBLogo className="w-5 h-5 text-white" />
+                <BetzLogo className="w-5 h-5 text-white" />
               </span>
               <div>
-                <span className="text-[10px] text-indigo-400 font-mono font-semibold tracking-wider block uppercase">Stage 3 Integration</span>
-                <h2 className="text-base font-black tracking-tight text-white leading-none">betz app</h2>
+                <span className="text-[10px] text-indigo-400 font-mono font-semibold tracking-wider block uppercase">Gamified Social Challenge App</span>
+                <h2 className="text-base font-black tracking-tight text-white leading-none">Betz</h2>
               </div>
             </div>
 
@@ -181,7 +181,7 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-bold tracking-tight text-white">Social habit staking meets cryptographically sound accountability.</h3>
+            <h3 className="text-xl font-bold tracking-tight text-white">Stake. Verify. Repeat.</h3>
             <p className="text-slate-400 text-xs leading-relaxed">
               BETZ is a peer-to-peer verification engine designed to lock in healthy routines. 
               Stake XP tokens, log check-in proof, and participate in peer-voting. Slashing guarantees discipline.
@@ -245,7 +245,7 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
               </div>
               <div className="space-y-1 flex-1 min-w-0">
                 <span className="text-[9px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">SHOWING UP DAILY</span>
-                <h4 className="text-xs font-black text-white truncate">BETZ Launch Ad</h4>
+                <h4 className="text-xs font-black text-white truncate">Battle Ropes</h4>
                 <p className="text-[10px] text-slate-400 leading-normal">
                   Our battle ropes training campaign representing verified discipline.
                 </p>
@@ -377,7 +377,7 @@ export default function AuthPage({ onLogin, onRegister }: AuthPageProps) {
                     ) : (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        Access Ledger Workspace
+                        Access
                       </>
                     )}
                   </button>

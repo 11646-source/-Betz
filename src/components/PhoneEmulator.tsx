@@ -6,7 +6,7 @@ import {
   ChevronRight, Send, User, Target, Layers, Search,
   Bell, AlertTriangle, Volume2, VolumeX, Info
 } from 'lucide-react';
-import EBLogo from './EBLogo';
+import BetzLogo from './BetzLogo';
 import { Challenge, CheckIn, Verification } from '../types';
 
 // Synthesize sound effects using Web Audio API to bypass asset dependency
@@ -146,6 +146,7 @@ export default function PhoneEmulator({
   // Mobile UI screens: 'FEED', 'DISCOVER', 'CREATE', 'LEADERBOARD', 'PROFILE', 'AUTH_LOGIN', 'AUTH_REGISTER'
   const [activeTab, setActiveTab] = useState<'FEED' | 'DISCOVER' | 'CREATE' | 'LEADERBOARD' | 'PROFILE'>('FEED');
   const [feedVideoMuted, setFeedVideoMuted] = useState(true);
+  const [discoverVideoMuted, setDiscoverVideoMuted] = useState(true);
   
   // Alarms and Warning States
   const [showAlarmsDrawer, setShowAlarmsDrawer] = useState(false);
@@ -632,7 +633,7 @@ export default function PhoneEmulator({
           )}
           <span className="w-3.5 h-2 bg-[#10B981] rounded-sm inline-block"></span>
           <span className="text-[10px] font-bold text-emerald-400">5G</span>
-          <EBLogo className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+          <BetzLogo className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
         </div>
       </header>
 
@@ -644,7 +645,7 @@ export default function PhoneEmulator({
           <div className="py-6 flex flex-col justify-center min-h-[500px]">
             <div className="text-center mb-6">
               <div className="inline-flex p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/20 mb-3">
-                <EBLogo className="w-8 h-8 text-white" />
+                <BetzLogo className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-xl font-bold tracking-tight">Access betz app</h2>
               <p className="text-xs text-slate-400 mt-1">Social habits staking & verification engine</p>
@@ -1008,6 +1009,58 @@ export default function PhoneEmulator({
                   <div className="flex items-center justify-between pb-1">
                     <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Challenge Registry</h3>
                     <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">{challenges.length} active</span>
+                  </div>
+
+                  {/* ACTIVE LIVE TRAINING ADVERT VIDEO HERO CARD - SECOND PAGE CAMPAIGN */}
+                  <div className="bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden relative shadow-lg group">
+                    <div className="relative h-44 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                      <video 
+                        id="discover-promo-video"
+                        src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
+                        autoPlay 
+                        muted={discoverVideoMuted} 
+                        loop 
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700"
+                      />
+                      {/* Gradient overlay for rich styling and text contrast */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
+                      
+                      {/* Dynamic active target badge */}
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600/95 text-white font-mono text-[9px] font-black tracking-widest px-2.5 py-1 rounded-md uppercase select-none shadow-md">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        LIVE TARGET WORKOUT
+                      </div>
+
+                      {/* Sound Controller overlay */}
+                      <button
+                        type="button"
+                        onClick={() => setDiscoverVideoMuted(!discoverVideoMuted)}
+                        className="absolute top-3 right-3 p-1.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1 shadow-lg cursor-pointer transition-all text-[8px] font-mono font-bold uppercase select-none z-10"
+                        title={discoverVideoMuted ? "Unmute campaign training music" : "Mute audio"}
+                      >
+                        {discoverVideoMuted ? (
+                          <>
+                            <VolumeX className="w-2.5 h-2.5 text-indigo-400 animate-pulse" />
+                            <span>UNMUTE</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-bounce" />
+                            <span className="text-emerald-400 font-bold">SOUND ON</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Training Info Overlay */}
+                      <div className="absolute bottom-3 left-3.5 right-3.5 text-left">
+                        <span className="text-[9px] text-amber-400 font-mono font-black uppercase tracking-wider block">DAY 10/31: SHOWING UP DAILY!</span>
+                        <h4 className="text-xs font-black text-white uppercase leading-none mt-0.5">Relentless Crossfit Challenge</h4>
+                        <p className="text-[10px] text-slate-300 leading-tight mt-1 font-sans">
+                          Lock in your stakes below and execute your daily battle rope checkpoint.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   {challenges.map((chal) => {
