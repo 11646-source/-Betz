@@ -126,7 +126,7 @@ export default function SandboxCockpit({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
         
         {/* Core Controls */}
-        <div className="md:col-span-5 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-4">
+        <div className="md:col-span-4 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1.5">
               <Cpu className="w-4 h-4" /> Server Controls
@@ -227,20 +227,20 @@ export default function SandboxCockpit({
         </div>
 
         {/* Campaign Video Advertisement Section */}
-        <div className="md:col-span-4 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between relative overflow-hidden group shadow-inner">
-          <div className="flex justify-between items-center mb-1.5 z-10">
-            <h4 className="text-[10px] font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+        <div className="md:col-span-5 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between relative overflow-hidden group shadow-inner">
+          <div className="flex justify-between items-center mb-2 z-10">
+            <h4 className="text-xs font-mono font-bold tracking-wider text-indigo-400 uppercase flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
               Live Launch Campaign
             </h4>
-            <span className="text-[9px] bg-indigo-950 border border-indigo-500/20 text-indigo-300 font-mono font-black tracking-widest px-1.5 py-0.5 rounded-full uppercase">
+            <span className="text-[10px] bg-indigo-950 border border-indigo-500/20 text-indigo-300 font-mono font-black tracking-widest px-2 py-0.5 rounded-full uppercase">
               Ad Promo
             </span>
           </div>
 
-          <div className="flex gap-2.5 items-center flex-1">
+          <div className="flex gap-4 items-center flex-1">
             {/* Loop video container */}
-            <div className="w-12 h-20 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800/80 flex-shrink-0 shadow-md flex items-center justify-center">
+            <div className="w-28 h-40 bg-slate-900 rounded-xl overflow-hidden relative border border-slate-800/80 flex-shrink-0 shadow-md flex items-center justify-center">
               <video 
                 id="sandbox-promo-video"
                 src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
@@ -256,25 +256,25 @@ export default function SandboxCockpit({
               <button
                 type="button"
                 onClick={() => setVideoMuted(!videoMuted)}
-                className="absolute bottom-1 right-1 p-1 bg-black/80 hover:bg-black text-white rounded-lg transition-all border border-slate-800/80 cursor-pointer"
+                className="absolute bottom-2 right-2 p-1.5 bg-black/80 hover:bg-black text-white rounded-lg transition-all border border-slate-800/80 cursor-pointer"
                 title={videoMuted ? "Unmute campaign music" : "Mute audio"}
               >
                 {videoMuted ? (
-                  <VolumeX className="w-2.5 h-2.5 text-slate-400" />
+                  <VolumeX className="w-3.5 h-3.5 text-slate-400" />
                 ) : (
-                  <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-pulse" />
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 )}
               </button>
             </div>
 
-            <div className="space-y-0.5 min-w-0 flex-1">
-              <span className="text-[8px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">DAY 10/31</span>
-              <h5 className="text-[10px] font-black text-white truncate uppercase">Battle Ropes Promo</h5>
-              <p className="text-[9px] text-slate-400 leading-tight">
+            <div className="space-y-1.5 min-w-0 flex-1">
+              <span className="text-[10px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">DAY 10/31</span>
+              <h5 className="text-sm font-black text-white uppercase tracking-wide">Battle Ropes Promo</h5>
+              <p className="text-xs text-slate-300 leading-relaxed">
                 Our active battle ropes training standard represents real staked discipline!
               </p>
-              <div className="pt-1 flex items-center gap-1 text-[8px] font-mono text-indigo-300">
-                <span className="bg-indigo-900/30 px-1 py-0.5 rounded border border-indigo-500/10 font-bold text-emerald-400">XP Reward: 1,500</span>
+              <div className="pt-1.5 flex items-center gap-1.5 text-[10px] font-mono text-indigo-300">
+                <span className="bg-indigo-900/40 px-2.5 py-1 rounded-lg border border-indigo-500/20 font-bold text-emerald-400">XP Reward: 1,500</span>
               </div>
             </div>
           </div>

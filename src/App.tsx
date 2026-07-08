@@ -358,7 +358,7 @@ export default function App() {
       
       {/* Sandbox Top Branded Masthead */}
       <header className="px-6 py-4 bg-[#EEEEEE] border-b border-indigo-200 shadow-sm z-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <span className="p-2 bg-indigo-600 rounded-xl shadow-md flex items-center justify-center">
@@ -401,7 +401,7 @@ export default function App() {
       </header>
 
       {/* Main landing page with Phone simulator and Sandbox cockpit side-by-side */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start justify-center">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start justify-center">
         {/* Left hand side: Phone Emulator */}
         <div className="flex-shrink-0 mx-auto lg:sticky lg:top-4">
           <PhoneEmulator

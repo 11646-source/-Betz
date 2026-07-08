@@ -542,10 +542,10 @@ export default function PhoneEmulator({
   };
 
   return (
-    <div className="w-[360px] h-[720px] bg-[#0F172A] rounded-[48px] border-[10px] border-[#334155] shadow-2xl relative flex flex-col overflow-hidden select-none">
+    <div className="w-full max-w-[1000px] h-[900px] bg-[#0F172A] rounded-2xl border border-slate-800 shadow-2xl relative flex flex-col overflow-hidden select-none">
       
       {/* Floating In-App Toast Notifications Overlay Stack */}
-      <div className="absolute top-[72px] left-3 right-3 z-50 pointer-events-none space-y-2">
+      <div className="absolute top-[64px] left-4 right-4 z-50 pointer-events-none space-y-3">
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
@@ -560,30 +560,30 @@ export default function PhoneEmulator({
                 }
                 setToasts(prev => prev.filter(t => t.id !== toast.id));
               }}
-              className="pointer-events-auto bg-slate-900/95 border border-indigo-500/30 backdrop-blur-md rounded-2xl p-3 shadow-xl shadow-slate-950/50 flex gap-2.5 cursor-pointer hover:bg-slate-850 transition-all group"
+              className="pointer-events-auto bg-slate-900/95 border border-indigo-500/30 backdrop-blur-md rounded-2xl p-4 shadow-xl shadow-slate-950/50 flex gap-3 cursor-pointer hover:bg-slate-850 transition-all group"
             >
               <div className="flex-shrink-0 flex items-center justify-center">
                 {toast.type === 'enrolled_challenge' ? (
-                  <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
-                    <Trophy className="w-3.5 h-3.5 animate-bounce" />
+                  <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-emerald-400">
+                    <Trophy className="w-4.5 h-4.5 animate-bounce" />
                   </div>
                 ) : (
-                  <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
-                    <Bell className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <div className="p-2.5 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
+                    <Bell className="w-4.5 h-4.5 text-amber-400 animate-pulse" />
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-bold text-slate-200 group-hover:text-white flex justify-between items-center font-mono">
+                <div className="text-xs font-bold text-slate-200 group-hover:text-white flex justify-between items-center font-mono">
                   <span>{toast.title}</span>
-                  <span className="text-[8px] text-slate-500 font-normal">now</span>
+                  <span className="text-[10px] text-slate-500 font-normal">now</span>
                 </div>
-                <p className="text-[9.5px] text-slate-400 leading-snug mt-0.5 font-sans break-words pr-2">
+                <p className="text-xs text-slate-400 leading-snug mt-1 font-sans break-words pr-2">
                   {toast.message}
                 </p>
-                <div className="text-[9px] font-mono font-medium text-indigo-400 mt-1 flex items-center gap-0.5 group-hover:text-indigo-300">
+                <div className="text-[10px] font-mono font-medium text-indigo-400 mt-1.5 flex items-center gap-0.5 group-hover:text-indigo-300">
                   <span>Tap to view</span>
-                  <ChevronRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
+                  <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
               <button
@@ -591,25 +591,19 @@ export default function PhoneEmulator({
                   e.stopPropagation();
                   setToasts(prev => prev.filter(t => t.id !== toast.id));
                 }}
-                className="flex-shrink-0 text-slate-500 hover:text-slate-300 self-start p-0.5"
+                className="flex-shrink-0 text-slate-500 hover:text-slate-300 self-start p-1"
               >
-                <X className="w-3 h-3" />
+                <X className="w-4 h-4" />
               </button>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
-      {/* Top Phone Notch / Speaker & Camera details */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#334155] rounded-b-2xl z-50 flex items-center justify-center">
-        <div className="w-12 h-1 bg-[#1E293B] rounded-full absolute top-1.5" />
-        <div className="w-2 h-2 bg-[#1E293B] rounded-full absolute right-6 top-1" />
-      </div>
-
       {/* Screen Header / Status Bar */}
-      <header className="pt-7 px-6 pb-2 bg-[#1E293B] border-b border-[#334155] flex justify-between items-center text-slate-300 font-mono text-xs z-20">
+      <header className="pt-4.5 px-6 pb-2.5 bg-[#1E293B] border-b border-[#334155] flex justify-between items-center text-slate-300 font-mono text-sm z-20">
         <span className="font-semibold text-slate-100">09:41</span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {currentUser && (
             <button 
               onClick={() => {
@@ -620,25 +614,25 @@ export default function PhoneEmulator({
                   playReminderSound();
                 }
               }}
-              className="relative p-1 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-md transition-all flex items-center justify-center cursor-pointer"
+              className="relative p-1.5 bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-300 rounded-md transition-all flex items-center justify-center cursor-pointer"
               title="Alarms & Notifications"
             >
-              <Bell className={`w-3.5 h-3.5 ${alarms.length > 0 ? 'text-amber-400 animate-bounce' : 'text-slate-400'}`} />
+              <Bell className={`w-4 h-4 ${alarms.length > 0 ? 'text-amber-400 animate-bounce' : 'text-slate-400'}`} />
               {alarms.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full text-[7px] w-3 h-3 font-bold flex items-center justify-center animate-pulse">
+                <span className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full text-[8px] w-3.5 h-3.5 font-bold flex items-center justify-center animate-pulse">
                   {alarms.length}
                 </span>
               )}
             </button>
           )}
-          <span className="w-3.5 h-2 bg-[#10B981] rounded-sm inline-block"></span>
-          <span className="text-[10px] font-bold text-emerald-400">5G</span>
-          <BetzLogo className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+          <span className="w-4 h-2.5 bg-[#10B981] rounded-sm inline-block"></span>
+          <span className="text-xs font-bold text-emerald-400">5G</span>
+          <BetzLogo className="w-4 h-4 text-amber-400 animate-pulse" />
         </div>
       </header>
 
       {/* Primary Simulator Screen Body */}
-      <div className="flex-1 bg-[#0F172A] overflow-y-auto overflow-x-hidden p-4 pb-20 custom-scrollbar text-slate-100">
+      <div className="flex-1 bg-[#0F172A] overflow-y-auto overflow-x-hidden p-6 pb-24 custom-scrollbar text-slate-100">
         
         {/* If user is not authenticated, show Auth Screens */}
         {!currentUser ? (
@@ -784,20 +778,20 @@ export default function PhoneEmulator({
           <div>
             
             {/* Logged in Welcome bar & quick profile stats */}
-            <div className="flex justify-between items-center bg-[#1E293B] p-3 rounded-2xl mb-4 border border-slate-800">
-              <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-indigo-500/20 text-indigo-400 rounded-lg">
-                  <User className="w-4 h-4" />
+            <div className="flex justify-between items-center bg-[#1E293B] p-5 rounded-2xl mb-6 border border-slate-800 shadow-md">
+              <div className="flex items-center gap-3.5">
+                <span className="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-xl">
+                  <User className="w-5 h-5" />
                 </span>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-mono">ACTIVE OPERATOR</span>
-                  <span className="text-xs font-bold font-mono">@{currentUser.username}</span>
+                  <span className="text-xs text-slate-400 block font-mono tracking-wider">ACTIVE OPERATOR</span>
+                  <span className="text-base font-extrabold font-mono text-indigo-300">@{currentUser.username}</span>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-400 block font-mono font-semibold">STAKED</span>
-                <span className="text-xs font-black text-amber-400 flex items-center justify-end gap-0.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                <span className="text-xs text-slate-400 block font-mono font-bold tracking-wider">STAKED</span>
+                <span className="text-lg font-black text-amber-400 flex items-center justify-end gap-1">
+                  <Sparkles className="w-5 h-5 text-amber-400 fill-current" />
                   {currentUser.total_xp} XP
                 </span>
               </div>
@@ -815,14 +809,14 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-1">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Verification Feed</h3>
-                    <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">{feed.length} checkins</span>
+                  <div className="flex items-center justify-between pb-2.5">
+                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider font-mono">Verification Feed</h3>
+                    <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full font-mono">{feed.length} checkins</span>
                   </div>
 
                   {/* ACTIVE LIVE TRAINING ADVERT VIDEO HERO CARD */}
-                  <div className="bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden relative shadow-md group">
-                    <div className="relative h-48 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                  <div className="bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden relative shadow-lg group">
+                    <div className="relative h-72 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
                       <video 
                         id="feed-promo-video"
                         src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
@@ -835,8 +829,8 @@ export default function PhoneEmulator({
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
                       
                       {/* Interactive live indicator */}
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600/95 text-white font-mono text-[9px] font-black tracking-widest px-2.5 py-1 rounded-md uppercase select-none shadow-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                      <div className="absolute top-4 left-4 flex items-center gap-2 bg-indigo-600/95 text-white font-mono text-[10px] font-black tracking-widest px-3 py-1.5 rounded-lg uppercase select-none shadow-md">
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
                         ACTIVE TARGET
                       </div>
 
@@ -844,27 +838,27 @@ export default function PhoneEmulator({
                       <button
                         type="button"
                         onClick={() => setFeedVideoMuted(!feedVideoMuted)}
-                        className="absolute top-3 right-3 p-1.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1 shadow-lg cursor-pointer transition-all text-[8px] font-mono font-bold uppercase select-none z-10"
+                        className="absolute top-4 right-4 p-2.5 rounded-xl bg-slate-950/95 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1.5 shadow-lg cursor-pointer transition-all text-[10px] font-mono font-bold uppercase select-none z-10"
                         title={feedVideoMuted ? "Unmute battle ropes training" : "Mute audio"}
                       >
                         {feedVideoMuted ? (
                           <>
-                            <VolumeX className="w-2.5 h-2.5 text-indigo-400 animate-pulse" />
+                            <VolumeX className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
                             <span>UNMUTE</span>
                           </>
                         ) : (
                           <>
-                            <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-bounce" />
+                            <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
                             <span className="text-emerald-400">SOUND ON</span>
                           </>
                         )}
                       </button>
 
                       {/* Video Title Overlays */}
-                      <div className="absolute bottom-3.5 left-3.5 right-3.5 text-left">
-                        <span className="text-[9px] text-indigo-400 font-mono font-bold uppercase tracking-wider block">SHOWING UP DAILY</span>
-                        <h4 className="text-sm font-black text-white uppercase leading-none mt-0.5">BETZ Launch Ad: Battle Ropes</h4>
-                        <p className="text-[10px] text-slate-300 leading-tight mt-1">
+                      <div className="absolute bottom-5 left-5 right-5 text-left">
+                        <span className="text-xs text-indigo-400 font-mono font-extrabold uppercase tracking-widest block">SHOWING UP DAILY</span>
+                        <h4 className="text-lg font-black text-white uppercase leading-tight mt-1">BETZ Launch Ad: Battle Ropes</h4>
+                        <p className="text-sm text-slate-300 leading-relaxed mt-1.5">
                           Our crossfit ropes campaign representing verified daily discipline.
                         </p>
                       </div>
@@ -872,8 +866,8 @@ export default function PhoneEmulator({
                   </div>
 
                   {feed.length === 0 ? (
-                    <div className="text-center py-12 bg-[#1E293B]/40 rounded-2xl border border-dashed border-slate-800">
-                      <p className="text-xs text-slate-500 font-mono">No checkpoint proofs logged on chain yet.</p>
+                    <div className="text-center py-16 bg-[#1E293B]/40 rounded-2xl border border-dashed border-slate-800">
+                      <p className="text-sm text-slate-500 font-mono">No checkpoint proofs logged on chain yet.</p>
                     </div>
                   ) : (
                     feed.map((post) => {
@@ -883,22 +877,22 @@ export default function PhoneEmulator({
                       const userVoted = post.votes.find(v => v.voter_id === currentUser.id);
 
                       return (
-                        <div key={post.id} className="bg-[#1E293B] rounded-2xl overflow-hidden border border-slate-800/80 hover:border-slate-700 transition-all shadow-md">
+                        <div key={post.id} className="bg-[#1E293B] rounded-2xl overflow-hidden border border-slate-800/80 hover:border-slate-700 transition-all shadow-lg">
                           
                           {/* Feed post header */}
-                          <div className="p-3 pb-2 flex justify-between items-center bg-[#1E293B]/60 border-b border-slate-800/40">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                              <span className="text-xs font-bold font-mono">@{post.username}</span>
+                          <div className="p-4.5 pb-3 flex justify-between items-center bg-[#1E293B]/60 border-b border-slate-800/40">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                              <span className="text-sm font-bold font-mono">@{post.username}</span>
                             </div>
-                            <span className="text-[9px] text-slate-400 bg-indigo-950/80 px-2 py-0.5 rounded font-mono border border-indigo-900/40">
-                              {post.challenge_title.slice(0, 20)}{post.challenge_title.length > 20 ? '...' : ''}
+                            <span className="text-[10px] text-indigo-300 bg-indigo-950/80 px-2.5 py-1 rounded-md font-mono border border-indigo-900/40 uppercase font-bold tracking-wider">
+                              {post.challenge_title.slice(0, 30)}{post.challenge_title.length > 30 ? '...' : ''}
                             </span>
                           </div>
 
                           {/* Image or Video proof if exists */}
                           {post.imageUrl && (
-                            <div className="w-full h-36 relative bg-slate-950">
+                            <div className="w-full h-72 relative bg-slate-950">
                               {post.imageUrl.toLowerCase().endsWith('.mp4') || post.imageUrl.toLowerCase().includes('video') ? (
                                 <video 
                                   src={post.imageUrl} 
@@ -918,20 +912,20 @@ export default function PhoneEmulator({
                               )}
                               
                               {/* Status badge */}
-                              <div className="absolute top-2.5 right-2.5">
+                              <div className="absolute top-3.5 right-3.5">
                                 {post.status === 'APPROVED' ? (
-                                  <span className="flex items-center gap-1 bg-emerald-950/90 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-500/30 shadow-lg">
-                                    <CheckCircle className="w-3 h-3 text-emerald-400" />
+                                  <span className="flex items-center gap-1.5 bg-emerald-950/95 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-full border border-emerald-500/30 shadow-lg">
+                                    <CheckCircle className="w-4 h-4 text-emerald-400" />
                                     VERIFIED
                                   </span>
                                 ) : post.status === 'DISPUTED' ? (
-                                  <span className="flex items-center gap-1 bg-rose-950/90 text-rose-400 text-[10px] font-bold px-2 py-1 rounded-full border border-rose-500/30 shadow-lg">
-                                    <X className="w-3 h-3 text-rose-400" />
+                                  <span className="flex items-center gap-1.5 bg-rose-950/95 text-rose-400 text-xs font-bold px-3 py-1.5 rounded-full border border-rose-500/30 shadow-lg">
+                                    <X className="w-4 h-4 text-rose-400" />
                                     DISPUTED
                                   </span>
                                 ) : (
-                                  <span className="flex items-center gap-1 bg-amber-950/90 text-amber-400 text-[10px] font-bold px-2 py-1 rounded-full border border-amber-500/30 shadow-lg">
-                                    <Clock className="w-3 h-3 text-amber-400" />
+                                  <span className="flex items-center gap-1.5 bg-amber-950/95 text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full border border-amber-500/30 shadow-lg">
+                                    <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
                                     PENDING ({approves}/2)
                                   </span>
                                 )}
@@ -940,52 +934,52 @@ export default function PhoneEmulator({
                           )}
 
                           {/* Proof content */}
-                          <div className="p-3 space-y-2">
-                            <p className="text-xs text-slate-200 leading-relaxed font-sans italic">
+                          <div className="p-4.5 space-y-4">
+                            <p className="text-sm text-slate-200 leading-relaxed font-sans italic">
                               "{post.text_proof}"
                             </p>
 
-                            <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-[10px] text-slate-400">
-                              <div className="flex items-center gap-1.5 font-mono">
-                                <span className="text-emerald-400 font-bold">✓ {approves}</span>
+                            <div className="flex items-center justify-between pt-3 border-t border-slate-800/60 text-xs text-slate-400">
+                              <div className="flex items-center gap-2 font-mono">
+                                <span className="text-emerald-400 font-bold">✓ {approves} APPROVED</span>
                                 <span className="text-slate-600">•</span>
-                                <span className="text-rose-400 font-bold">✗ {disputes}</span>
+                                <span className="text-rose-400 font-bold">✗ {disputes} DISPUTED</span>
                               </div>
-                              <span className="text-[9px] font-mono opacity-80">
+                              <span className="text-xs font-mono opacity-80">
                                 {new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
 
                             {/* VOTING OPTIONS (Hide for self checkins) */}
                             {post.user_id === currentUser.id ? (
-                              <div className="pt-2 text-center text-[9px] font-mono text-slate-500 bg-slate-900/40 py-1.5 rounded-lg border border-slate-800/40">
+                              <div className="pt-2 text-center text-xs font-mono text-slate-500 bg-slate-900/40 py-2 rounded-xl border border-slate-800/40">
                                 Your own submission
                               </div>
                             ) : (
-                              <div className="pt-2 grid grid-cols-2 gap-2">
+                              <div className="pt-2 grid grid-cols-2 gap-3">
                                 <button
                                   onClick={() => onCastVote(post.id, 'APPROVE')}
                                   disabled={userVoted?.vote === 'APPROVE'}
-                                  className={`py-1.5 rounded-xl text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all ${
+                                  className={`py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all ${
                                     userVoted?.vote === 'APPROVE'
                                       ? 'bg-emerald-950/40 text-emerald-500/60 border border-emerald-900/20'
-                                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-pointer'
                                   }`}
                                 >
-                                  <Check className="w-3.5 h-3.5" />
-                                  Approve
+                                  <Check className="w-4 h-4" />
+                                  Approve Proof
                                 </button>
                                 <button
                                   onClick={() => onCastVote(post.id, 'DISPUTED')}
                                   disabled={userVoted?.vote === 'DISPUTED'}
-                                  className={`py-1.5 rounded-xl text-[10px] font-mono font-bold flex items-center justify-center gap-1 transition-all ${
+                                  className={`py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all ${
                                     userVoted?.vote === 'DISPUTED'
                                       ? 'bg-rose-950/40 text-rose-500/60 border border-rose-900/20'
-                                      : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                      : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 cursor-pointer'
                                   }`}
                                 >
-                                  <X className="w-3.5 h-3.5" />
-                                  Dispute
+                                  <X className="w-4 h-4" />
+                                  Dispute Proof
                                 </button>
                               </div>
                             )}
@@ -1006,14 +1000,14 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-1">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Challenge Registry</h3>
-                    <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">{challenges.length} active</span>
+                  <div className="flex items-center justify-between pb-2.5">
+                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider font-mono">Challenge Registry</h3>
+                    <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full font-mono">{challenges.length} active</span>
                   </div>
 
                   {/* ACTIVE LIVE TRAINING ADVERT VIDEO HERO CARD - SECOND PAGE CAMPAIGN */}
                   <div className="bg-slate-950 border border-slate-800/80 rounded-2xl overflow-hidden relative shadow-lg group">
-                    <div className="relative h-44 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
+                    <div className="relative h-64 w-full bg-slate-950 overflow-hidden flex items-center justify-center">
                       <video 
                         id="discover-promo-video"
                         src="https://assets.mixkit.co/videos/preview/mixkit-woman-doing-crossfit-training-with-ropes-40033-large.mp4"
@@ -1027,8 +1021,8 @@ export default function PhoneEmulator({
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
                       
                       {/* Dynamic active target badge */}
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-indigo-600/95 text-white font-mono text-[9px] font-black tracking-widest px-2.5 py-1 rounded-md uppercase select-none shadow-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                      <div className="absolute top-4 left-4 flex items-center gap-2 bg-indigo-600/95 text-white font-mono text-[10px] font-black tracking-widest px-3 py-1.5 rounded-lg uppercase select-none shadow-md">
+                        <span className="w-2 h-2 rounded-full bg-white animate-ping" />
                         LIVE TARGET WORKOUT
                       </div>
 
@@ -1036,27 +1030,27 @@ export default function PhoneEmulator({
                       <button
                         type="button"
                         onClick={() => setDiscoverVideoMuted(!discoverVideoMuted)}
-                        className="absolute top-3 right-3 p-1.5 rounded-xl bg-slate-950/90 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1 shadow-lg cursor-pointer transition-all text-[8px] font-mono font-bold uppercase select-none z-10"
+                        className="absolute top-4 right-4 p-2.5 rounded-xl bg-slate-950/95 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800/80 flex items-center gap-1.5 shadow-lg cursor-pointer transition-all text-[10px] font-mono font-bold uppercase select-none z-10"
                         title={discoverVideoMuted ? "Unmute campaign training music" : "Mute audio"}
                       >
                         {discoverVideoMuted ? (
                           <>
-                            <VolumeX className="w-2.5 h-2.5 text-indigo-400 animate-pulse" />
+                            <VolumeX className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
                             <span>UNMUTE</span>
                           </>
                         ) : (
                           <>
-                            <Volume2 className="w-2.5 h-2.5 text-emerald-400 animate-bounce" />
+                            <Volume2 className="w-3.5 h-3.5 text-emerald-400 animate-bounce" />
                             <span className="text-emerald-400 font-bold">SOUND ON</span>
                           </>
                         )}
                       </button>
 
                       {/* Training Info Overlay */}
-                      <div className="absolute bottom-3 left-3.5 right-3.5 text-left">
-                        <span className="text-[9px] text-amber-400 font-mono font-black uppercase tracking-wider block">DAY 10/31: SHOWING UP DAILY!</span>
-                        <h4 className="text-xs font-black text-white uppercase leading-none mt-0.5">Relentless Crossfit Challenge</h4>
-                        <p className="text-[10px] text-slate-300 leading-tight mt-1 font-sans">
+                      <div className="absolute bottom-5 left-5 right-5 text-left">
+                        <span className="text-xs text-amber-400 font-mono font-black uppercase tracking-widest block">DAY 10/31: SHOWING UP DAILY!</span>
+                        <h4 className="text-base font-black text-white uppercase leading-tight mt-1">Relentless Crossfit Challenge</h4>
+                        <p className="text-sm text-slate-300 leading-relaxed mt-1.5 font-sans">
                           Lock in your stakes below and execute your daily battle rope checkpoint.
                         </p>
                       </div>
@@ -1071,34 +1065,34 @@ export default function PhoneEmulator({
                     return (
                       <div 
                         key={chal.id} 
-                        className="bg-[#1E293B] border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-indigo-500/50 transition-all cursor-pointer"
+                        className="bg-[#1E293B] border border-slate-800 rounded-2xl p-5.5 space-y-4 hover:border-indigo-500/50 transition-all cursor-pointer shadow-md"
                         onClick={() => setSelectedChallenge(selectedChallenge?.id === chal.id ? null : chal)}
                       >
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className="text-[9px] bg-indigo-950 text-indigo-400 border border-indigo-900/50 px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider">
+                            <span className="text-xs bg-indigo-950 text-indigo-300 border border-indigo-900/50 px-3 py-1 rounded-md font-mono font-bold uppercase tracking-wider">
                               {chal.category}
                             </span>
-                            <h4 className="text-sm font-bold text-white mt-1.5">{chal.title}</h4>
+                            <h4 className="text-base font-extrabold text-white mt-2.5">{chal.title}</h4>
                           </div>
                           <div className="text-right">
-                            <span className="text-[9px] text-slate-400 font-mono block">REWARD</span>
-                            <span className="text-xs font-black text-amber-400 font-mono flex items-center justify-end">
+                            <span className="text-[10px] text-slate-400 font-mono block tracking-wider">REWARD</span>
+                            <span className="text-sm font-black text-amber-400 font-mono flex items-center justify-end gap-0.5">
                               +{chal.reward_xp} XP
                             </span>
                           </div>
                         </div>
 
-                        <p className="text-xs text-slate-300 leading-normal font-sans">
+                        <p className="text-sm text-slate-300 leading-relaxed font-sans">
                           {chal.description}
                         </p>
 
-                        <div className="flex justify-between items-center pt-2 border-t border-slate-800/50 text-[10px] font-mono text-slate-400">
-                          <div className="flex items-center gap-1.5">
-                            <Clock className="w-3 h-3 text-slate-500" />
+                        <div className="flex justify-between items-center pt-3 border-t border-slate-800/50 text-xs font-mono text-slate-400">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-indigo-400" />
                             <span>{chal.duration_days} days limit</span>
                           </div>
-                          <span>{chal.participants_count} locked in</span>
+                          <span className="text-indigo-300 font-bold">{chal.participants_count} locked in</span>
                         </div>
 
                         {/* Expandable Action drawer */}
@@ -1106,22 +1100,22 @@ export default function PhoneEmulator({
                           <motion.div 
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
-                            className="pt-3 border-t border-slate-800/50 flex flex-col gap-2"
+                            className="pt-4 border-t border-slate-800/50 flex flex-col gap-3"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <div className="text-[10px] font-mono text-slate-400">
+                            <div className="text-xs font-mono text-slate-400">
                               Launched by: <span className="text-slate-200">@{chal.creator_username}</span>
                             </div>
                             
                             {isEnrolled ? (
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[11px] font-mono text-slate-300 bg-slate-900/60 p-2 rounded-xl">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between text-xs font-mono text-slate-300 bg-slate-900/60 p-3 rounded-xl">
                                   <span>Enrollment Status:</span>
                                   <span className="text-emerald-400 font-bold">{enrollment?.status}</span>
                                 </div>
                                 <button
                                   onClick={() => { setSubmittingCheckinFor(chal); setCheckinForm({ text_proof: '', imageUrl: '' }); }}
-                                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 text-xs font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1"
+                                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2.5 text-xs font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                                 >
                                   <Check className="w-4 h-4" />
                                   Log Progress Check-in
@@ -1130,7 +1124,7 @@ export default function PhoneEmulator({
                             ) : (
                               <button
                                 onClick={() => onJoinChallenge(chal.id)}
-                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2 text-xs font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1"
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 text-xs font-mono font-bold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                               >
                                 <Target className="w-4 h-4" />
                                 Accept Bet (Stakes Staked)
@@ -1153,19 +1147,19 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Deploy New Challenge</h3>
-                    <div className="text-[9px] bg-indigo-500/10 text-indigo-300 font-mono px-2 py-0.5 rounded-full border border-indigo-500/20">
+                  <div className="flex items-center justify-between pb-1">
+                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider font-mono">Deploy New Challenge</h3>
+                    <div className="text-xs bg-indigo-500/10 text-indigo-300 font-mono px-3 py-1 rounded-full border border-indigo-500/20">
                       BETZ Lab
                     </div>
                   </div>
 
                   {/* Mode Toggle Selector */}
-                  <div className="flex bg-[#1E293B] p-1 rounded-xl border border-slate-800">
+                  <div className="flex bg-[#1E293B] p-1.5 rounded-2xl border border-slate-800">
                     <button
                       type="button"
                       onClick={() => setCreateMode('MANUAL')}
-                      className={`flex-1 text-center py-1.5 text-[10px] font-mono font-bold rounded-lg transition-all ${
+                      className={`flex-1 text-center py-2.5 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer ${
                         createMode === 'MANUAL'
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'text-slate-400 hover:text-slate-200'
@@ -1176,13 +1170,13 @@ export default function PhoneEmulator({
                     <button
                       type="button"
                       onClick={() => setCreateMode('RESEARCH')}
-                      className={`flex-1 text-center py-1.5 text-[10px] font-mono font-bold rounded-lg transition-all flex items-center justify-center gap-1 ${
+                      className={`flex-1 text-center py-2.5 text-xs font-mono font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                         createMode === 'RESEARCH'
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
-                      <UserPlus className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                      <UserPlus className="w-4 h-4 text-amber-300 animate-pulse" />
                       Find Friend Lab
                     </button>
                   </div>
@@ -1193,58 +1187,58 @@ export default function PhoneEmulator({
                         <motion.div
                           initial={{ scale: 0.95, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
-                          className="bg-emerald-950/40 border border-emerald-500/20 p-4 rounded-2xl space-y-3.5 text-center"
+                          className="bg-emerald-950/40 border border-emerald-500/20 p-6 rounded-2xl space-y-4.5 text-center"
                         >
-                          <div className="inline-flex p-3 bg-emerald-500/10 rounded-full text-emerald-400 mb-1">
-                            <CheckCircle className="w-8 h-8 animate-bounce" />
+                          <div className="inline-flex p-4.5 bg-emerald-500/10 rounded-full text-emerald-400 mb-1">
+                            <CheckCircle className="w-10 h-10 animate-bounce" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-emerald-300 font-mono">Matched Successfully!</h4>
-                            <p className="text-[10px] text-emerald-400/80 mt-1">Staking contract created with your new friend.</p>
+                            <h4 className="text-base font-bold text-emerald-300 font-mono">Matched Successfully!</h4>
+                            <p className="text-xs text-emerald-400/80 mt-1">Staking contract created with your new friend.</p>
                           </div>
 
-                          <div className="bg-slate-900/60 p-3 rounded-xl border border-emerald-500/10 text-left space-y-2">
-                            <div className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <div className="bg-slate-900/60 p-4.5 rounded-xl border border-emerald-500/10 text-left space-y-2.5">
+                            <div className="text-sm font-bold text-white font-mono flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                               <span>{researchSuccess.challenge.title}</span>
                             </div>
-                            <p className="text-[10px] text-slate-300">{researchSuccess.challenge.description}</p>
-                            <div className="flex gap-2 text-[9px] font-mono text-slate-400 pt-1.5 border-t border-slate-800">
+                            <p className="text-xs text-slate-300">{researchSuccess.challenge.description}</p>
+                            <div className="flex gap-2 text-[10px] font-mono text-slate-400 pt-2 border-t border-slate-800">
                               <span>Reward: <strong className="text-amber-400">{researchSuccess.challenge.reward_xp} XP</strong></span>
                               <span>•</span>
                               <span>Duration: <strong className="text-slate-200">{researchSuccess.challenge.duration_days} Days</strong></span>
                             </div>
                           </div>
 
-                          <div className="bg-slate-900/40 p-3 rounded-xl border border-indigo-500/10 text-left">
-                            <div className="text-[10px] uppercase font-mono tracking-wider text-indigo-400 font-bold mb-1">Accountability Friend</div>
-                            <div className="text-xs font-bold text-slate-200 font-mono">@{researchSuccess.challenger.username}</div>
-                            <p className="text-[10px] text-slate-400 italic mt-0.5">"{researchSuccess.bio}"</p>
+                          <div className="bg-slate-900/40 p-4.5 rounded-xl border border-indigo-500/10 text-left">
+                            <div className="text-[11px] uppercase font-mono tracking-wider text-indigo-400 font-bold mb-1">Accountability Friend</div>
+                            <div className="text-sm font-bold text-slate-200 font-mono">@{researchSuccess.challenger.username}</div>
+                            <p className="text-xs text-slate-400 italic mt-0.5">"{researchSuccess.bio}"</p>
                           </div>
 
-                          <div className="text-[10px] text-slate-500 font-mono animate-pulse">
+                          <div className="text-xs text-slate-500 font-mono animate-pulse">
                             Returning to Lobby in 5 seconds...
                           </div>
                         </motion.div>
                       ) : (
-                        <form onSubmit={handleResearchSubmit} className="space-y-4 bg-[#1E293B] p-4 rounded-2xl border border-slate-800">
-                          <div className="space-y-1">
-                            <h4 className="text-xs font-bold text-indigo-300 font-mono flex items-center gap-1.5">
-                              <UserPlus className="w-4 h-4 text-amber-400" />
+                        <form onSubmit={handleResearchSubmit} className="space-y-5 bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-md">
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-bold text-indigo-300 font-mono flex items-center gap-2">
+                              <UserPlus className="w-5 h-5 text-amber-400" />
                               Match with a New Friend
                             </h4>
-                            <p className="text-[10px] text-slate-400 leading-normal">
+                            <p className="text-xs text-slate-400 leading-relaxed">
                               Enter any interest, habit, or goal (e.g. "Morning jogging", "Swift coding", "Cold exposure"). Our matchmaking system will research and find a new accountability friend who shares this focus, design a custom staking contract, and instantly enroll you both!
                             </p>
                           </div>
 
-                          <div className="space-y-2">
-                            <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Find Friend</label>
+                          <div className="space-y-2.5">
+                            <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400">Find Friend</label>
                             <div className="relative">
-                              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                               <input 
                                 type="text"
-                                className="w-full bg-[#0F172A] border border-slate-700 rounded-full pl-9 pr-24 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-mono"
+                                className="w-full bg-[#0F172A] border border-slate-700 rounded-full pl-10 pr-28 py-3.5 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 font-mono"
                                 placeholder="e.g. cold plunge or morning yoga"
                                 value={researchTopic}
                                 onChange={e => setResearchTopic(e.target.value)}
@@ -1255,7 +1249,7 @@ export default function PhoneEmulator({
                               <button
                                 type="submit"
                                 disabled={researchLoading || !researchTopic.trim()}
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-[10px] font-mono font-bold rounded-full transition-all"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white text-[11px] font-mono font-bold rounded-full transition-all cursor-pointer"
                               >
                                 {researchLoading ? 'Searching...' : 'Search'}
                               </button>
@@ -1263,7 +1257,7 @@ export default function PhoneEmulator({
                           </div>
 
                           {researchError && (
-                            <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs font-mono">
+                            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-mono">
                               {researchError}
                             </div>
                           )}
@@ -1271,16 +1265,16 @@ export default function PhoneEmulator({
                           <button
                             type="submit"
                             disabled={researchLoading || !researchTopic.trim()}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white rounded-xl py-2.5 text-xs font-mono font-semibold shadow-lg transition-all flex items-center justify-center gap-2"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white rounded-xl py-3.5 text-sm font-mono font-bold shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                           >
                             {researchLoading ? (
                               <>
-                                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                                <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
                                 Finding Friend & Contract...
                               </>
                             ) : (
                               <>
-                                <Sparkles className="w-4 h-4 text-amber-300" />
+                                <Sparkles className="w-4.5 h-4.5 text-amber-300 animate-pulse" />
                                 Find Friend & Start Challenge
                               </>
                             )}
@@ -1289,12 +1283,12 @@ export default function PhoneEmulator({
                       )}
                     </div>
                   ) : (
-                    <form onSubmit={handleChallengeCreateSubmit} className="space-y-3.5 bg-[#1E293B] p-4 rounded-2xl border border-slate-800">
+                    <form onSubmit={handleChallengeCreateSubmit} className="space-y-5 bg-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-md">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Challenge Title</label>
+                        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Challenge Title</label>
                         <input 
                           type="text"
-                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500"
                           placeholder="e.g. Daily LeetCode Challenge"
                           value={newChalForm.title}
                           onChange={e => setNewChalForm({...newChalForm, title: e.target.value})}
@@ -1304,9 +1298,9 @@ export default function PhoneEmulator({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staking Description</label>
+                        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Staking Description</label>
                         <textarea 
-                          className="w-full h-16 bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 resize-none"
+                          className="w-full h-24 bg-[#0F172A] border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 resize-none"
                           placeholder="Detail exactly what researchers must log to prove completion."
                           value={newChalForm.description}
                           onChange={e => setNewChalForm({...newChalForm, description: e.target.value})}
@@ -1315,11 +1309,11 @@ export default function PhoneEmulator({
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Category</label>
+                          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Category</label>
                           <select
-                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                             value={newChalForm.category}
                             onChange={e => setNewChalForm({...newChalForm, category: e.target.value})}
                           >
@@ -1332,9 +1326,9 @@ export default function PhoneEmulator({
                         </div>
 
                         <div>
-                          <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Staked Reward</label>
+                          <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Staked Reward</label>
                           <select
-                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                            className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                             value={newChalForm.reward_xp}
                             onChange={e => setNewChalForm({...newChalForm, reward_xp: Number(e.target.value)})}
                           >
@@ -1347,9 +1341,9 @@ export default function PhoneEmulator({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Duration Days</label>
+                        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Duration Days</label>
                         <select
-                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                           value={newChalForm.duration_days}
                           onChange={e => setNewChalForm({...newChalForm, duration_days: Number(e.target.value)})}
                         >
@@ -1361,9 +1355,9 @@ export default function PhoneEmulator({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">Starts In</label>
+                        <label className="block text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2">Starts In</label>
                         <select
-                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-[#0F172A] border border-slate-700 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                           value={newChalForm.starts_in_hours}
                           onChange={e => setNewChalForm({...newChalForm, starts_in_hours: Number(e.target.value)})}
                         >
@@ -1376,22 +1370,22 @@ export default function PhoneEmulator({
                       </div>
 
                       {createError && (
-                        <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs font-mono">
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-mono">
                           {createError}
                         </div>
                       )}
 
                       {createSuccess && (
-                        <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs font-mono">
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-mono">
                           Challenge broadcasted!
                         </div>
                       )}
 
                       <button 
                         type="submit" 
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-2.5 text-xs font-mono font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5"
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl py-3.5 text-sm font-mono font-bold shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <PlusCircle className="w-4 h-4" />
+                        <PlusCircle className="w-4.5 h-4.5" />
                         Commit Staking Ledger
                       </button>
                     </form>
@@ -1408,23 +1402,23 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-1">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">Researcher Leaderboard</h3>
-                    <span className="text-[10px] text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full font-mono">Ranked by Staked XP</span>
+                  <div className="flex items-center justify-between pb-2.5">
+                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider font-mono">Researcher Leaderboard</h3>
+                    <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full font-mono">Ranked by Staked XP</span>
                   </div>
 
-                  <div className="bg-[#1E293B] rounded-2xl border border-slate-800 overflow-hidden divide-y divide-slate-800/60">
+                  <div className="bg-[#1E293B] rounded-2xl border border-slate-800 overflow-hidden divide-y divide-slate-800/60 shadow-md">
                     {leaderboard.map((user, idx) => {
                       const isSelf = user.id === currentUser.id;
                       return (
                         <div 
                           key={user.id} 
-                          className={`p-3.5 flex justify-between items-center transition-all ${
+                          className={`p-4.5 flex justify-between items-center transition-all ${
                             isSelf ? 'bg-indigo-600/10' : 'hover:bg-slate-800/30'
                           }`}
                         >
-                          <div className="flex items-center gap-3">
-                            <span className={`w-6 h-6 rounded-lg text-xs font-bold font-mono flex items-center justify-center ${
+                          <div className="flex items-center gap-4">
+                            <span className={`w-8 h-8 rounded-lg text-sm font-bold font-mono flex items-center justify-center ${
                               idx === 0 ? 'bg-amber-500 text-slate-950 shadow shadow-amber-500/30' :
                               idx === 1 ? 'bg-slate-300 text-slate-950' :
                               idx === 2 ? 'bg-amber-700 text-white' :
@@ -1433,21 +1427,21 @@ export default function PhoneEmulator({
                               {idx + 1}
                             </span>
                             <div>
-                              <span className="text-xs font-bold font-mono block text-white">
-                                @{user.username} {isSelf && <span className="text-[9px] text-indigo-400 font-semibold font-mono">(YOU)</span>}
+                              <span className="text-sm font-bold font-mono block text-white">
+                                @{user.username} {isSelf && <span className="text-[10px] text-indigo-400 font-semibold font-mono">(YOU)</span>}
                               </span>
-                              <span className="text-[9px] text-slate-500 font-mono block uppercase">
+                              <span className="text-[10px] text-slate-500 font-mono block uppercase">
                                 ID: {user.id.slice(0, 8)}
                               </span>
                             </div>
                           </div>
                           
                           <div className="text-right">
-                            <span className="text-xs font-black text-amber-400 font-mono flex items-center gap-1 justify-end">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                            <span className="text-sm font-black text-amber-400 font-mono flex items-center gap-1 justify-end">
+                              <Sparkles className="w-4 h-4 text-amber-400 fill-current" />
                               {user.total_xp}
                             </span>
-                            <span className="text-[9px] text-slate-500 block font-mono">XP LEDGERED</span>
+                            <span className="text-[10px] text-slate-500 block font-mono">XP LEDGERED</span>
                           </div>
                         </div>
                       );
@@ -1465,43 +1459,43 @@ export default function PhoneEmulator({
                   exit={{ opacity: 0 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between pb-1">
-                    <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider font-mono">My Accountability Lock-Ins</h3>
+                  <div className="flex items-center justify-between pb-2.5">
+                    <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider font-mono">My Accountability Lock-Ins</h3>
                     <button 
                       onClick={onLogout}
-                      className="text-[10px] text-slate-400 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-lg font-mono hover:text-white transition-all flex items-center gap-1"
+                      className="text-xs text-slate-300 bg-slate-800 border border-slate-700 px-3.5 py-1.5 rounded-xl font-mono hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
                     >
-                      <LogOut className="w-3 h-3" />
+                      <LogOut className="w-3.5 h-3.5 text-rose-400" />
                       Sign Out
                     </button>
                   </div>
 
                   {userChallenges.length === 0 ? (
-                    <div className="text-center py-10 bg-[#1E293B]/40 rounded-2xl border border-dashed border-slate-800 space-y-3">
-                      <p className="text-xs text-slate-500 font-mono">You aren't locked into any active stakes right now.</p>
+                    <div className="text-center py-14 bg-[#1E293B]/40 rounded-2xl border border-dashed border-slate-800 space-y-4.5">
+                      <p className="text-sm text-slate-500 font-mono">You aren't locked into any active stakes right now.</p>
                       <button
                         onClick={() => setActiveTab('DISCOVER')}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer"
                       >
                         Find Stakes
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4.5">
                       {userChallenges.map((uc) => {
                         const chal = uc.challenge;
                         if (!chal) return null;
                         
                         return (
-                          <div key={uc.id} className="bg-[#1E293B] border border-slate-800 rounded-2xl p-3.5 space-y-3">
+                          <div key={uc.id} className="bg-[#1E293B] border border-slate-800 rounded-2xl p-5.5 space-y-4 shadow-md">
                             <div className="flex justify-between items-start">
                               <div>
-                                <span className="text-[8px] bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono font-semibold uppercase">
+                                <span className="text-[10px] bg-slate-900 border border-slate-800 text-slate-400 px-2.5 py-1 rounded font-mono font-semibold uppercase">
                                   {chal.category}
                                 </span>
-                                <h4 className="text-xs font-bold text-white mt-1.5">{chal.title}</h4>
+                                <h4 className="text-base font-extrabold text-white mt-2.5">{chal.title}</h4>
                               </div>
-                              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                              <span className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded ${
                                 uc.status === 'COMPLETED' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-900' :
                                 'bg-indigo-950/60 text-indigo-400 border border-indigo-900'
                               }`}>
@@ -1510,12 +1504,12 @@ export default function PhoneEmulator({
                             </div>
 
                             {/* Progress bar */}
-                            <div className="space-y-1">
-                              <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-xs font-mono text-slate-400">
                                 <span>Check-Ins Accomplished</span>
                                 <span className="text-white font-bold">{uc.progress} / {chal.duration_days} days</span>
                               </div>
-                              <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden">
+                              <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden">
                                 <div 
                                   className="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-300" 
                                   style={{ width: `${Math.min(100, (uc.progress / chal.duration_days) * 100)}%` }}
@@ -1527,9 +1521,9 @@ export default function PhoneEmulator({
                             {uc.status === 'ACTIVE' && (
                               <button
                                 onClick={() => { setSubmittingCheckinFor(chal); setCheckinForm({ text_proof: '', imageUrl: '' }); }}
-                                className="w-full bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-xl py-1.5 text-[11px] font-mono font-bold transition-all flex items-center justify-center gap-1"
+                                className="w-full bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-xl py-2.5 text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                               >
-                                <PlusCircle className="w-3.5 h-3.5" />
+                                <PlusCircle className="w-4.5 h-4.5" />
                                 Post Check-In Proof
                               </button>
                             )}
@@ -1820,7 +1814,7 @@ export default function PhoneEmulator({
                   <h3 className="text-xl font-black font-mono text-indigo-400 tracking-wider">CHALLENGE START ALARM</h3>
                   <p className="text-xs text-indigo-400 font-mono uppercase">starting in 1 hour</p>
                 </div>
-                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl max-w-[280px]">
+                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl max-w-[420px]">
                   <p className="text-xs text-slate-300 leading-relaxed font-mono">
                     {activeBanner.msg}
                   </p>
@@ -1849,7 +1843,7 @@ export default function PhoneEmulator({
                   <h3 className="text-xl font-black font-mono text-amber-400 tracking-wider">REMINDER WARNING</h3>
                   <p className="text-xs text-amber-400 font-mono uppercase">active stakes pending check-in</p>
                 </div>
-                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl max-w-[280px]">
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl max-w-[420px]">
                   <p className="text-xs text-slate-300 leading-relaxed font-mono">
                     {activeBanner.msg}
                   </p>
@@ -1870,56 +1864,56 @@ export default function PhoneEmulator({
 
       {/* Persistent Bottom Tab Navigation Bar (Only if logged in) */}
       {currentUser && (
-        <nav className="absolute bottom-0 inset-x-0 h-16 bg-[#1E293B] border-t border-[#334155] px-4 flex items-center justify-between z-30">
+        <nav className="absolute bottom-0 inset-x-0 h-20 bg-[#1E293B] border-t border-[#334155] px-6 flex items-center justify-between z-30 shadow-2xl">
           
           <button 
             onClick={() => { setActiveTab('FEED'); setSelectedChallenge(null); setSubmittingCheckinFor(null); }}
-            className={`flex flex-col items-center justify-center flex-1 transition-all ${
-              activeTab === 'FEED' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center justify-center flex-1 transition-all cursor-pointer py-1.5 ${
+              activeTab === 'FEED' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Activity className="w-4 h-4" />
-            <span className="text-[8px] font-mono font-medium mt-1">Feed</span>
+            <Activity className="w-5.5 h-5.5 mb-1" />
+            <span className="text-[10px] font-mono tracking-wide uppercase">Feed</span>
           </button>
 
           <button 
             onClick={() => { setActiveTab('DISCOVER'); setSelectedChallenge(null); setSubmittingCheckinFor(null); }}
-            className={`flex flex-col items-center justify-center flex-1 transition-all ${
-              activeTab === 'DISCOVER' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center justify-center flex-1 transition-all cursor-pointer py-1.5 ${
+              activeTab === 'DISCOVER' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Target className="w-4 h-4" />
-            <span className="text-[8px] font-mono font-medium mt-1">Stakes</span>
+            <Target className="w-5.5 h-5.5 mb-1" />
+            <span className="text-[10px] font-mono tracking-wide uppercase">Stakes</span>
           </button>
 
           <button 
             onClick={() => { setActiveTab('CREATE'); setSelectedChallenge(null); setSubmittingCheckinFor(null); }}
-            className={`flex flex-col items-center justify-center flex-1 transition-all ${
-              activeTab === 'CREATE' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center justify-center flex-1 transition-all cursor-pointer py-1.5 ${
+              activeTab === 'CREATE' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <PlusCircle className="w-4.5 h-4.5 text-indigo-500 hover:scale-105 active:scale-95" />
-            <span className="text-[8px] font-mono font-medium mt-1">Deploy</span>
+            <PlusCircle className="w-6.5 h-6.5 text-indigo-500 hover:scale-110 active:scale-95 mb-1" />
+            <span className="text-[10px] font-mono tracking-wide uppercase">Deploy</span>
           </button>
 
           <button 
             onClick={() => { setActiveTab('LEADERBOARD'); setSelectedChallenge(null); setSubmittingCheckinFor(null); }}
-            className={`flex flex-col items-center justify-center flex-1 transition-all ${
-              activeTab === 'LEADERBOARD' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center justify-center flex-1 transition-all cursor-pointer py-1.5 ${
+              activeTab === 'LEADERBOARD' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Trophy className="w-4 h-4" />
-            <span className="text-[8px] font-mono font-medium mt-1">Leaderboard</span>
+            <Trophy className="w-5.5 h-5.5 mb-1" />
+            <span className="text-[10px] font-mono tracking-wide uppercase">Ranks</span>
           </button>
 
           <button 
             onClick={() => { setActiveTab('PROFILE'); setSelectedChallenge(null); setSubmittingCheckinFor(null); }}
-            className={`flex flex-col items-center justify-center flex-1 transition-all ${
-              activeTab === 'PROFILE' ? 'text-indigo-400' : 'text-slate-400 hover:text-slate-200'
+            className={`flex flex-col items-center justify-center flex-1 transition-all cursor-pointer py-1.5 ${
+              activeTab === 'PROFILE' ? 'text-indigo-400 font-bold scale-105' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Layers className="w-4 h-4" />
-            <span className="text-[8px] font-mono font-medium mt-1">Mine</span>
+            <Layers className="w-5.5 h-5.5 mb-1" />
+            <span className="text-[10px] font-mono tracking-wide uppercase">Mine</span>
           </button>
 
         </nav>
